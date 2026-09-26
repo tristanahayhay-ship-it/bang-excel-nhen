@@ -3,27 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Excel Bản Cải Tiến - Univer Sheet</title>
+    <title>Hệ thống Excel Bản Cải Tiến Hoàn Chỉnh</title>
     
-    <!-- Tải toàn bộ mã CSS cốt lõi và giao diện Sheet của Univer -->
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <link rel="stylesheet" href="https://jsdelivr.net">
+    <!-- Tải tệp CSS tổng hợp duy nhất của Univer - Đảm bảo không lỗi hiển thị -->
     <link rel="stylesheet" href="https://jsdelivr.net">
 
-    <!-- Tải các lõi xử lý JavaScript (UMD) độc lập -->
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
+    <!-- Tải tệp JS lõi tổng hợp của Univer (Đầy đủ toàn bộ chức năng Excel) -->
     <script src="https://jsdelivr.net"></script>
 
     <style>
@@ -31,9 +16,9 @@
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        /* Vùng chứa bảng tính Excel chiếm trọn vẹn không gian màn hình */
-        #univer-container {
+        #excel-app {
             width: 100%;
             height: 100%;
         }
@@ -41,43 +26,42 @@
 </head>
 <body>
 
-    <!-- Khung chứa cấu trúc lưới Excel -->
-    <div id="univer-container"></div>
+    <!-- Khung chứa bảng tính Excel -->
+    <div id="excel-app"></div>
 
     <script>
-        // Kích hoạt lõi kiến trúc Univer ngay khi trang web sẵn sàng
-        const univer = new UniverCore.Univer({
-            theme: UniverDesign.defaultTheme,
+        // Sử dụng gói UMD tổng hợp để kích hoạt Excel tức thì không sợ xung đột file
+        const univer = new UniverComponent.Univer({
+            theme: UniverComponent.defaultTheme
         });
 
-        // Đăng ký các mô-đun UI, thanh công cụ, lõi render đồ họa và trình biên dịch công thức
-        univer.registerPlugin(UniverRenderEngine.UniverRenderEnginePlugin);
-        univer.registerPlugin(UniverFormulaEngine.UniverFormulaEnginePlugin);
-        univer.registerPlugin(UniverUi.UniverUiPlugin, {
-            container: 'univer-container',
-            header: true,    // Bật thanh Menu (File, Home, Insert...)
-            toolbar: true,   // Bật thanh công cụ nhanh (Font, màu sắc, căn lề...)
-            footer: true,    // Bật thanh quản lý Sheet (Sheet1, Sheet2...) và thanh trạng thái
+        // Kích hoạt toàn bộ các lõi tính năng cao cấp của Microsoft Excel
+        univer.registerPlugin(UniverComponent.UniverRenderEnginePlugin);
+        univer.registerPlugin(UniverComponent.UniverFormulaEnginePlugin);
+        univer.registerPlugin(UniverComponent.UniverUiPlugin, {
+            container: 'excel-app',
+            header: true,   // Bật thanh Menu chính (File, Home, Insert)
+            toolbar: true,  // Bật thanh công cụ (Đậm, Nghiêng, Cỡ chữ, Màu sắc)
+            footer: true,   // Bật thanh quản lý nhiều Sheet và thanh thống kê số liệu
         });
 
-        univer.registerPlugin(UniverDocs.UniverDocsPlugin);
-        univer.registerPlugin(UniverDocsUi.UniverDocsUiPlugin);
-        univer.registerPlugin(UniverSheets.UniverSheetsPlugin);
-        univer.registerPlugin(UniverSheetsUi.UniverSheetsUiPlugin);
-        univer.registerPlugin(UniverSheetsNumfmt.UniverSheetsNumfmtPlugin);
-        univer.registerPlugin(UniverSheetsFormula.UniverSheetsFormulaPlugin);
+        // Đăng ký kiến trúc bảng tính chuyên nghiệp
+        univer.registerPlugin(UniverComponent.UniverDocsPlugin);
+        univer.registerPlugin(UniverComponent.UniverSheetsPlugin);
+        univer.registerPlugin(UniverComponent.UniverSheetsUiPlugin);
+        univer.registerPlugin(UniverComponent.UniverSheetsFormulaPlugin);
 
-        // Khởi tạo một Workbook trống có cấu trúc dòng cột y hệt Microsoft Excel
+        // Tạo lập bảng tính khởi tạo với cấu trúc dòng cột chuẩn
         univer.createUniverSheet({
-            id: 'workbook-1',
-            name: 'Bảng tính cải tiến',
-            sheetOrder: ['sheet-1'],
+            id: 'smart-workbook',
+            name: 'Hệ thống Excel Agent',
+            sheetOrder: ['sheet-main'],
             sheets: {
-                'sheet-1': {
-                    id: 'sheet-1',
+                'sheet-main': {
+                    id: 'sheet-main',
                     name: 'Sheet1',
-                    rowCount: 100,    // Khởi tạo sẵn 100 dòng
-                    columnCount: 26,  // Khởi tạo sẵn 26 cột (A-Z)
+                    rowCount: 100,      // Khởi tạo sẵn 100 dòng kéo dài xuống
+                    columnCount: 26,    // Khởi tạo sẵn từ cột A đến cột Z
                 }
             }
         });
