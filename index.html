@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Excel Bản Cải Tiến Hoàn Chỉnh</title>
+    <title>Phần Mềm Excel Bản Cải Tiến Thông Minh</title>
     
-    <!-- Tải tệp CSS tổng hợp duy nhất của Univer - Đảm bảo không lỗi hiển thị -->
-    <link rel="stylesheet" href="https://jsdelivr.net">
-
-    <!-- Tải tệp JS lõi tổng hợp của Univer (Đầy đủ toàn bộ chức năng Excel) -->
+    <!-- Tải các lõi thư viện chạy bảng tính Excel ổn định cao -->
+    <link rel="stylesheet" href="https://jsdelivr.net" type="text/css" />
+    <link rel="stylesheet" href="https://jsdelivr.net" type="text/css" />
+    <link rel="stylesheet" href="https://googleapis.com" />
+    
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
 
     <style>
@@ -18,53 +22,125 @@
             overflow: hidden;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        #excel-app {
-            width: 100%;
-            height: 100%;
+        /* Thanh công cụ chính phía trên cùng phần mềm */
+        #top-bar {
+            height: 50px; background-color: #107c41; color: white;
+            display: flex; align-items: center; padding: 0 20px;
+            font-size: 16px; font-weight: bold; justify-content: space-between;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+            z-index: 10; position: relative;
+        }
+        #export-btn {
+            background-color: #ffffff; color: #107c41; border: 1px solid #ffffff;
+            padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;
+            transition: all 0.2s;
+        }
+        #export-btn:hover { background-color: #f1f1f1; transform: scale(1.02); }
+        
+        /* Không gian làm việc chứa bảng tính */
+        #main-container {
+            position: absolute; top: 50px; bottom: 0; left: 0; right: 0;
+            background-color: #f4f6f9; display: flex; flex-direction: column;
+        }
+        /* Định dạng thanh công cụ Ribbon giống Excel thật */
+        .jexcel_toolbar {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #dcdcdc !important;
+            padding: 6px 12px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        #spreadsheet-container {
+            flex: 1; overflow: auto; padding: 15px; background-color: #f4f6f9;
+        }
+        #spreadsheet {
+            background: white; box-shadow: 0px 4px 12px rgba(0,0,0,0.05); border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Khung chứa bảng tính Excel -->
-    <div id="excel-app"></div>
+    <!-- Thanh tiêu đề phần mềm -->
+    <div id="top-bar">
+        <span>📊 Phần Mềm Bảng Tính Excel Hệ Thống (Bản Cải Tiến)</span>
+        <button id="export-btn" onclick="exportToExcel()">📥 Xuất file Excel (.xlsx)</button>
+    </div>
+
+    <!-- Vùng chứa thanh công cụ và ô lưới phần mềm -->
+    <div id="main-container">
+        <div id="spreadsheet-container">
+            <div id="spreadsheet"></div>
+        </div>
+    </div>
 
     <script>
-        // Sử dụng gói UMD tổng hợp để kích hoạt Excel tức thì không sợ xung đột file
-        const univer = new UniverComponent.Univer({
-            theme: UniverComponent.defaultTheme
-        });
+        let tableInstance = null;
 
-        // Kích hoạt toàn bộ các lõi tính năng cao cấp của Microsoft Excel
-        univer.registerPlugin(UniverComponent.UniverRenderEnginePlugin);
-        univer.registerPlugin(UniverComponent.UniverFormulaEnginePlugin);
-        univer.registerPlugin(UniverComponent.UniverUiPlugin, {
-            container: 'excel-app',
-            header: true,   // Bật thanh Menu chính (File, Home, Insert)
-            toolbar: true,  // Bật thanh công cụ (Đậm, Nghiêng, Cỡ chữ, Màu sắc)
-            footer: true,   // Bật thanh quản lý nhiều Sheet và thanh thống kê số liệu
-        });
-
-        // Đăng ký kiến trúc bảng tính chuyên nghiệp
-        univer.registerPlugin(UniverComponent.UniverDocsPlugin);
-        univer.registerPlugin(UniverComponent.UniverSheetsPlugin);
-        univer.registerPlugin(UniverComponent.UniverSheetsUiPlugin);
-        univer.registerPlugin(UniverComponent.UniverSheetsFormulaPlugin);
-
-        // Tạo lập bảng tính khởi tạo với cấu trúc dòng cột chuẩn
-        univer.createUniverSheet({
-            id: 'smart-workbook',
-            name: 'Hệ thống Excel Agent',
-            sheetOrder: ['sheet-main'],
-            sheets: {
-                'sheet-main': {
-                    id: 'sheet-main',
-                    name: 'Sheet1',
-                    rowCount: 100,      // Khởi tạo sẵn 100 dòng kéo dài xuống
-                    columnCount: 26,    // Khởi tạo sẵn từ cột A đến cột Z
-                }
+        // Khởi tạo phần mềm Excel với ma trận dữ liệu chuẩn (26 cột A-Z x 50 hàng)
+        function initExcelSoftware() {
+            let initialData = [];
+            for (let i = 0; i < 50; i++) {
+                initialData.push(new Array(26).fill('')); // Tạo sẵn các ô trống từ cột A-Z
             }
-        });
+            
+            tableInstance = jspreadsheet(document.getElementById('spreadsheet'), {
+                data: initialData,
+                minDimensions:, // Tạo lưới 26 cột x 50 dòng ban đầu
+                tableOverflow: true,
+                tableWidth: '100%',
+                tableHeight: '100%',
+                contextMenu: true, // Bật Menu chuột phải: Thêm/Xóa dòng, Sắp xếp Sort dữ liệu, Gộp ô
+                
+                // Cấu hình đầy đủ thanh công cụ chức năng (Toolbar Ribbon)
+                toolbar: [
+                    { type: 'i', content: 'undo', onclick: function() { tableInstance.undo(); } },
+                    { type: 'i', content: 'redo', onclick: function() { tableInstance.redo(); } },
+                    { type: 'select', k: 'font-family', v: ['Segoe UI','Arial','Verdana','Times New Roman'] },
+                    { type: 'select', k: 'font-size', v: ['10px','11px','12px','14px','16px','18px'] },
+                    { type: 'i', content: 'format_bold', k: 'font-weight', v: 'bold' },
+                    { type: 'i', content: 'format_italic', k: 'font-style', v: 'italic' },
+                    { type: 'i', content: 'format_underlined', k: 'text-decoration', v: 'underline' },
+                    { type: 'i', content: 'format_color_text', k: 'color' }, // Đổi màu chữ
+                    { type: 'i', content: 'format_color_fill', k: 'background-color' }, // Tô màu nền ô
+                    { type: 'i', content: 'format_align_left', k: 'text-align', v: 'left' },
+                    { type: 'i', content: 'format_align_center', k: 'text-align', v: 'center' },
+                    { type: 'i', content: 'format_align_right', k: 'text-align', v: 'right' }
+                ]
+            });
+        }
+
+        // Tự động kích hoạt khi phần mềm tải xong
+        window.onload = function() {
+            initExcelSoftware();
+        };
+
+        // Hàm trích xuất toàn bộ ma trận dữ liệu và thuật toán công thức ra file .xlsx thật
+        function exportToExcel() {
+            if (!tableInstance) return alert("Phần mềm chưa khởi tạo xong!");
+            let currentData = tableInstance.getData();
+            
+            let workbook = new ExcelJS.Workbook();
+            let worksheet = workbook.addWorksheet('Sheet1');
+
+            currentData.forEach((row, rowIndex) => {
+                row.forEach((cellValue, colIndex) => {
+                    if (cellValue !== '' && cellValue !== null) {
+                        let cellObj = worksheet.getCell(rowIndex + 1, colIndex + 1);
+                        // Nhận diện công thức toán học bắt đầu bằng dấu "=" (Ví dụ: =SUM(B2:B5))
+                        if (typeof cellValue === 'string' && cellValue.startsWith('=')) {
+                            cellObj.value = { formula: cellValue.substring(1) };
+                        } else {
+                            cellObj.value = cellValue;
+                        }
+                    }
+                });
+            });
+
+            // Tiến hành đóng gói nhị phân và kích hoạt tải về máy tính
+            workbook.xlsx.writeBuffer().then(buffer => {
+                saveAs(new Blob([buffer]), "Du_Lieu_Excel_Cai_Tien.xlsx");
+            });
+        }
     </script>
 </body>
 </html>
