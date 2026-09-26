@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phần Mềm Excel Bản Cải Tiến Thông Minh</title>
     
-    <!-- Tải các lõi thư viện chạy bảng tính Excel ổn định cao -->
-    <link rel="stylesheet" href="https://jsdelivr.net" type="text/css" />
-    <link rel="stylesheet" href="https://jsdelivr.net" type="text/css" />
+    <!-- Tải CSS hệ thống bảng tính siêu ổn định chống lỗi trắng trang -->
+    <link rel="stylesheet" href="https://cloudflare.com" type="text/css" />
+    <link rel="stylesheet" href="https://cloudflare.com" type="text/css" />
     <link rel="stylesheet" href="https://googleapis.com" />
     
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
+    <!-- Tải JavaScript từ nguồn CDN dự phòng tốc độ cao -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
 
     <style>
         body, html {
@@ -22,7 +23,7 @@
             overflow: hidden;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        /* Thanh công cụ chính phía trên cùng phần mềm */
+        /* Thanh công cụ Microsoft Excel trên cùng */
         #top-bar {
             height: 50px; background-color: #107c41; color: white;
             display: flex; align-items: center; padding: 0 20px;
@@ -34,21 +35,11 @@
         #export-btn {
             background-color: #ffffff; color: #107c41; border: 1px solid #ffffff;
             padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;
-            transition: all 0.2s;
         }
-        #export-btn:hover { background-color: #f1f1f1; transform: scale(1.02); }
-        
-        /* Không gian làm việc chứa bảng tính */
+        /* Vùng chứa không gian làm việc chính */
         #main-container {
             position: absolute; top: 50px; bottom: 0; left: 0; right: 0;
             background-color: #f4f6f9; display: flex; flex-direction: column;
-        }
-        /* Định dạng thanh công cụ Ribbon giống Excel thật */
-        .jexcel_toolbar {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #dcdcdc !important;
-            padding: 6px 12px !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         #spreadsheet-container {
             flex: 1; overflow: auto; padding: 15px; background-color: #f4f6f9;
@@ -56,42 +47,45 @@
         #spreadsheet {
             background: white; box-shadow: 0px 4px 12px rgba(0,0,0,0.05); border-radius: 4px;
         }
+        /* Ghi đè CSS đảm bảo thanh toolbar hiện icon đẹp mắt */
+        .jexcel_toolbar {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #dcdcdc !important;
+            padding: 6px 12px !important;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Thanh tiêu đề phần mềm -->
     <div id="top-bar">
         <span>📊 Phần Mềm Bảng Tính Excel Hệ Thống (Bản Cải Tiến)</span>
         <button id="export-btn" onclick="exportToExcel()">📥 Xuất file Excel (.xlsx)</button>
     </div>
 
-    <!-- Vùng chứa thanh công cụ và ô lưới phần mềm -->
     <div id="main-container">
         <div id="spreadsheet-container">
             <div id="spreadsheet"></div>
         </div>
     </div>
-
     <script>
         let tableInstance = null;
 
-        // Khởi tạo phần mềm Excel với ma trận dữ liệu chuẩn (26 cột A-Z x 50 hàng)
+        // Khởi tạo phần mềm Excel với ma trận dữ liệu (26 cột A-Z x 50 hàng)
         function initExcelSoftware() {
             let initialData = [];
             for (let i = 0; i < 50; i++) {
-                initialData.push(new Array(26).fill('')); // Tạo sẵn các ô trống từ cột A-Z
+                initialData.push(new Array(26).fill('')); // Tạo ô trống từ cột A-Z
             }
             
             tableInstance = jspreadsheet(document.getElementById('spreadsheet'), {
                 data: initialData,
-                minDimensions:, // Tạo lưới 26 cột x 50 dòng ban đầu
+                minDimensions:, // Khóa cứng lưới 26 cột x 50 dòng để chống lỗi hiển thị
                 tableOverflow: true,
                 tableWidth: '100%',
                 tableHeight: '100%',
-                contextMenu: true, // Bật Menu chuột phải: Thêm/Xóa dòng, Sắp xếp Sort dữ liệu, Gộp ô
+                contextMenu: true, // Bật Menu chuột phải
                 
-                // Cấu hình đầy đủ thanh công cụ chức năng (Toolbar Ribbon)
+                // Cấu hình đầy đủ thanh công cụ chức năng Ribbon
                 toolbar: [
                     { type: 'i', content: 'undo', onclick: function() { tableInstance.undo(); } },
                     { type: 'i', content: 'redo', onclick: function() { tableInstance.redo(); } },
@@ -100,8 +94,8 @@
                     { type: 'i', content: 'format_bold', k: 'font-weight', v: 'bold' },
                     { type: 'i', content: 'format_italic', k: 'font-style', v: 'italic' },
                     { type: 'i', content: 'format_underlined', k: 'text-decoration', v: 'underline' },
-                    { type: 'i', content: 'format_color_text', k: 'color' }, // Đổi màu chữ
-                    { type: 'i', content: 'format_color_fill', k: 'background-color' }, // Tô màu nền ô
+                    { type: 'i', content: 'format_color_text', k: 'color' }, 
+                    { type: 'i', content: 'format_color_fill', k: 'background-color' }, 
                     { type: 'i', content: 'format_align_left', k: 'text-align', v: 'left' },
                     { type: 'i', content: 'format_align_center', k: 'text-align', v: 'center' },
                     { type: 'i', content: 'format_align_right', k: 'text-align', v: 'right' }
@@ -109,12 +103,9 @@
             });
         }
 
-        // Tự động kích hoạt khi phần mềm tải xong
         window.onload = function() {
             initExcelSoftware();
         };
-
-        // Hàm trích xuất toàn bộ ma trận dữ liệu và thuật toán công thức ra file .xlsx thật
         function exportToExcel() {
             if (!tableInstance) return alert("Phần mềm chưa khởi tạo xong!");
             let currentData = tableInstance.getData();
@@ -126,7 +117,6 @@
                 row.forEach((cellValue, colIndex) => {
                     if (cellValue !== '' && cellValue !== null) {
                         let cellObj = worksheet.getCell(rowIndex + 1, colIndex + 1);
-                        // Nhận diện công thức toán học bắt đầu bằng dấu "=" (Ví dụ: =SUM(B2:B5))
                         if (typeof cellValue === 'string' && cellValue.startsWith('=')) {
                             cellObj.value = { formula: cellValue.substring(1) };
                         } else {
@@ -136,7 +126,6 @@
                 });
             });
 
-            // Tiến hành đóng gói nhị phân và kích hoạt tải về máy tính
             workbook.xlsx.writeBuffer().then(buffer => {
                 saveAs(new Blob([buffer]), "Du_Lieu_Excel_Cai_Tien.xlsx");
             });
