@@ -1,35 +1,20 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CF Web 3D Mini Test</title>
-    <!-- Nhúng file định dạng CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Nhúng thư viện đồ họa 3D Three.js -->
-    <script src="https://cloudflare.com"></script>
-</head>
-<body>
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+}
 
-    <!-- Màn hình chờ khóa chuột khi mới vào game -->
-    <div id="blocker">
-        <div id="instructions">BẤM VÀO ĐÂY ĐỂ VÀO GAME (CF WEB)</div>
-        <div id="sub-instructions">
-            Di chuyển: WASD | Ngắm/Quay chuột: Di chuyển chuột<br>
-            Bắn: Chuột trái | Bấm ESC để thoát chuột
-        </div>
-    </div>
+#game-container {
+    border: 4px solid #ff0000;
+    box-shadow: 0 0 20px #ff0000;
+}
 
-    <!-- Hồng tâm ngắm bắn ở chính giữa màn hình -->
-    <div id="crosshair"></div>
-
-    <!-- Bảng hiển thị điểm số -->
-    <div id="scoreboard">SCORE: <span id="score">0</span></div>
-
-    <!-- Nơi chứa toàn bộ thế giới 3D -->
-    <div id="canvas-container"></div>
-
-    <!-- Nhúng file xử lý logic game JavaScript -->
-    <script src="game.js"></script>
-</body>
-</html>
+canvas {
+    background-color: #000;
+    display: block;
+}
