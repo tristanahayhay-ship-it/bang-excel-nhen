@@ -3,46 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Biên Dịch Python Trực Tuyến - Programiz Tiếng Việt</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Nhúng thư viện lõi biên dịch Python ngay trên trình duyệt -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Notepad Spider Crawler</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #e0ebf4; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        
+        /* Giao diện mô phỏng Notepad Windows 11 */
+        .notepad-container { width: 90vw; height: 85vh; background: #f3f3f3; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; border: 1px solid #bbb; position: relative; }
+        .title-bar { height: 40px; background: #dde4eb; display: flex; align-items: center; padding: 0 15px; border-top-left-radius: 8px; border-top-right-radius: 8px; border-bottom: 1px solid #ccc; font-size: 12px; color: #333; }
+        .tab { background: #f3f3f3; padding: 8px 20px; border-radius: 6px 6px 0 0; border: 1px solid #ccc; border-bottom: none; margin-top: 8px; font-weight: 500; }
+        
+        /* Thanh công cụ */
+        .toolbar { height: 45px; background: #f3f3f3; border-bottom: 1px solid #ddd; display: flex; align-items: center; padding: 0 15px; gap: 15px; font-size: 13px; color: #555; }
+        .tool-group { display: flex; gap: 8px; align-items: center; border-right: 1px solid #ccc; padding-right: 15px; }
+        .btn { padding: 4px 8px; border-radius: 4px; cursor: pointer; user-select: none; }
+        .btn:hover { background: #e5e5e5; }
+        .btn.bold { font-weight: bold; } .btn.italic { font-style: italic; } .btn.strike { text-decoration: line-through; }
+        
+        /* Khu vực nhập liệu */
+        .editor-container { flex: 1; position: relative; background: #fff; overflow: auto; padding: 20px; }
+        #text-input { width: 100%; height: 100%; border: none; resize: none; outline: none; font-size: 16px; line-height: 1.6; color: #222; background: transparent; white-space: pre; }
+        
+        /* Con nhện kỹ thuật số */
+        #spider { position: absolute; width: 40px; height: 40px; background: #222; border-radius: 50%; pointer-events: none; display: none; transition: all 0.4s ease-in-out; z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #spider::before, #spider::after { content: ''; position: absolute; width: 60px; height: 2px; background: #222; top: 19px; left: -10px; }
+        #spider::after { transform: rotate(45deg); }
+        #spider::before { transform: rotate(-45deg); }
+        .spider-eye { position: absolute; width: 6px; height: 6px; background: #00ffcc; border-radius: 50%; top: 10px; box-shadow: 0 0 5px #00ffcc; }
+        .spider-eye.left { left: 10px; } .spider-eye.right { right: 10px; }
+        
+        /* Hiệu ứng quét dòng dữ liệu trùng */
+        .scanning-line { position: absolute; left: 20px; right: 20px; height: 26px; background: rgba(0, 255, 200, 0.2); border-left: 4px solid #00ffcc; pointer-events: none; display: none; transition: top 0.3s ease; }
+        
+        /* Thanh trạng thái dưới cùng */
+        .status-bar { height: 30px; background: #f3f3f3; border-top: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; color: #666; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+    </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo"><span>🕷️</span> Python Online Compiler (Việt Hóa)</div>
-        <button class="btn-run" onclick="runPython()">▶ CHẠY CODE (RUN)</button>
-    </header>
-
-    <div class="main-compiler">
-        <!-- BÊN TRÁI: Giao diện soạn thảo mã nguồn -->
-        <div class="editor-container">
-            <div class="panel-bar">main.py</div>
-            <textarea id="code" spellcheck="false"># Gõ thử code sai ở đây để xem nhện hoạt động nhé!
-ten = "Lập trình viên"
-print("Xin chào " + ten)
-
-# CỐ TÌNH LỖI: Viết sai chính tả hàm print thành 'prnt'
-prnt("Dòng này bị viết sai tên hàm rồi!")
-</textarea>
-            <!-- Phần tử ẩn làm gương đo đạc pixel tọa độ ký tự lỗi -->
-            <div id="textarea-mirror"></div>
+    <div class="notepad-container">
+        <div class="title-bar">
+            <div class="tab">New Tài liệu văn bản.txt</div>
         </div>
         
-        <!-- BÊN PHẢI: Khung hiển thị kết quả nguyên bản của Programiz -->
-        <div class="output-container">
-            <div class="panel-bar">KẾT QUẢ HỆ THỐNG (OUTPUT)</div>
-            <pre id="output">Đang khởi động môi trường Python... Vui lòng đợi...</pre>
+        <div class="toolbar">
+            <div class="tool-group">
+                <div class="btn">File</div><div class="btn">Edit</div><div class="btn">View</div>
+            </div>
+            <div class="tool-group">
+                <div class="btn">H1 ▾</div><div class="btn bold">B</div><div class="btn italic">I</div><div class="btn strike">S</div><div class="btn">🔗</div><div class="btn">⊞ ▾</div>
+            </div>
+            <div class="status-text" id="spider-status" style="color: #0066cc; font-weight: bold;">Trạng thái: Sẵn sàng nhận dữ liệu...</div>
+        </div>
+        
+        <div class="editor-container" id="editor-wrapper">
+            <textarea id="text-input" placeholder="Dán danh sách dữ liệu của bạn vào đây (mỗi dữ liệu 1 dòng)...&#10;Ví dụ:&#10;Nguyen Van A&#10;Nguyen Van B&#10;Nguyen Van A (trùng)"></textarea>
+            <div id="spider">
+                <div class="spider-eye left"></div>
+                <div class="spider-eye right"></div>
+            </div>
+            <div id="scan-overlay" class="scanning-line"></div>
+        </div>
+        
+        <div class="status-bar">
+            <div>Ln 1, Col 1 | <span id="char-count">0 characters</span></div>
+            <div>AA Formatted | 100% | Windows (CRLF) | UTF-8</div>
         </div>
     </div>
 
-    <!-- Bong bóng thoại Tiếng Việt của con nhện kiểm lỗi -->
-    <div id="spider-bubble"></div>
-    
-    <!-- Lớp vẽ đồ họa con nhện phủ toàn màn hình -->
-    <canvas id="spider-layer"></canvas>
+    <script>
+        const textarea = document.getElementById('text-input');
+        const charCount = document.getElementById('char-count');
+        const spider = document.getElementById('spider');
+        const scanOverlay = document.getElementById('scan-overlay');
+        const statusText = document.getElementById('spider-status');
+        let isCrawling = false;
 
-    <script src="script.js"></script>
+        // Cập nhật số lượng ký tự
+        textarea.addEventListener('input', () => {
+            charCount.textContent = `${textarea.value.length} characters`;
+        });
+
+        // Bắt sự kiện khi người dùng DÁN (Paste) dữ liệu
+        textarea.addEventListener('paste', (e) => {
+            if (isCrawling) return;
+            
+            // Lấy dữ liệu từ clipboard sau khi dán xong 100ms
+            setTimeout(() => {
+                startSpiderCrawler();
+            }, 100);
+        });
+
+        async function startSpiderCrawler() {
+            const text = textarea.value;
+            if (!text.trim()) return;
+
+            isCrawling = true;
+            textarea.readOnly = true; // Khóa bảng không cho nhập khi nhện đang chạy
+            statusText.textContent = "🕷️ Nhện đang xuất hiện để quét dữ liệu...";
+
+            const lines = text.split('\n');
+            const uniqueLines = [];
+            const seen = new Set();
+            
+            // Hiện nhện và thanh quét
+            spider.style.display = 'block';
+            scanOverlay.style.display = 'block';
+
+            // Giả lập nhện bò qua từng dòng để kiểm tra
+            for (let i = 0; i < lines.length; i++) {
+                const currentLineText = lines[i].trim();
+                
+                // Di chuyển nhện và thanh quét tương ứng với vị trí dòng (ước tính bằng font-size và line-height)
+                const topPosition = 20 + (i * 25.6); // 25.6px là chiều cao mỗi dòng tương đối
+                scanOverlay.style.top = `${topPosition}px`;
+                spider.style.top = `${topPosition - 8}px`;
+                spider.style.left = `${Math.random() * 40 + 40}%`; // Nhện bò ngẫu nhiên từ trái sang phải
+
+                if (currentLineText === "") {
+                    uniqueLines.push(lines[i]);
+                    continue;
+                }
+
+                if (seen.has(currentLineText)) {
+                    // Nếu trùng, nhện đổi màu mắt sang Đỏ để báo hiệu phát hiện trùng và "ăn" dòng đó
+                    statusText.textContent = `❌ Phát hiện trùng lặp: "${currentLineText}" -> Đang loại bỏ!`;
+                    document.querySelectorAll('.spider-eye').forEach(el => el.style.backgroundColor = '#ff3333');
+                    document.querySelectorAll('.spider-eye').forEach(el => el.style.boxShadow = '0 0 5px #ff3333');
+                    await sleep(600); // Nhện dừng lại xử lý dòng trùng lâu hơn một chút
+                } else {
+                    // Nếu không trùng, mắt màu Xanh và lưu lại dòng này
+                    seen.add(currentLineText);
+                    uniqueLines.push(lines[i]);
+                    document.querySelectorAll('.spider-eye').forEach(el => el.style.backgroundColor = '#00ffcc');
+                    document.querySelectorAll('.spider-eye').forEach(el => el.style.boxShadow = '0 0 5px #00ffcc');
+                    statusText.textContent = `🔍 Kiểm tra dòng ${i + 1}: Hợp lệ.`;
+                    await sleep(300); // Tốc độ bò qua dòng bình thường
+                }
+            }
+
+            // Hoàn thành: Cập nhật lại văn bản sạch đã lọc trùng vào ô nhập liệu
+            textarea.value = uniqueLines.filter(line => line !== null).join('\n');
+            charCount.textContent = `${textarea.value.length} characters`;
+            
+            // Ẩn nhện
+            spider.style.display = 'none';
+            scanOverlay.style.display = 'none';
+            statusText.textContent = "✅ Đã lọc sạch trùng lặp! Nhện đã rút lui.";
+            textarea.readOnly = false;
+            isCrawling = false;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
 </body>
 </html>
