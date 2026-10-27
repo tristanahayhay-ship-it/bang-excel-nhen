@@ -3,255 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Học Python Tự Lập - Hệ Thống Nhện Săn Lỗi</title>
+    <title>Python Visual Crawler Network Lab</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-        body { background-color: #161822; color: #a6accd; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
+        body { background-color: #0d0f1a; color: #7982a9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
         
-        header { height: 50px; background-color: #1f2335; border-bottom: 1px solid #292e42; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 15px; font-weight: bold; color: #ff9e64; }
-        .logo span { color: #7aa2f7; }
-        #run-btn { height: 32px; padding: 0 15px; background-color: #41a1f4; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #run-btn:hover { background-color: #268bd2; }
+        header { height: 50px; background-color: #141726; border-bottom: 1px solid #1f2438; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 14px; font-weight: bold; color: #00f0ff; tracking-spacing: 1px; text-transform: uppercase; }
+        .logo span { color: #ff007f; }
+        #compile-btn { height: 32px; padding: 0 16px; background-color: #00f0ff; color: #0d0f1a; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        #compile-btn:hover { background-color: #00bfff; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
 
-        main { flex: 1; display: flex; overflow: hidden; }
+        main { flex: 1; display: flex; overflow: hidden; position: relative; }
         
-        /* Khu vực nhập code tự chế không phụ thuộc thư viện ngoài */
-        .editor-zone { flex: 1; display: flex; flex-direction: column; position: relative; background-color: #1a1b26; border-right: 1px solid #292e42; }
-        .editor-header { height: 35px; background-color: #1f2335; display: flex; align-items: center; px: 15px; padding: 0 15px; font-size: 12px; color: #565f89; border-bottom: 1px solid #292e42; }
-        .code-container { flex: 1; display: flex; position: relative; overflow: auto; }
-        .line-numbers { width: 45px; background-color: #1a1b26; border-right: 1px solid #292e42; text-align: right; padding-right: 10px; padding-top: 15px; color: #414868; user-select: none; line-height: 24px; font-size: 14px; }
-        #code-input { flex: 1; background: transparent; border: none; outline: none; color: #c0caf5; padding-left: 15px; padding-top: 15px; resize: none; font-size: 14px; line-height: 24px; font-family: monospace; overflow-y: hidden; white-space: pre; }
+        /* Panel Nhập Mã Nguồn */
+        .code-panel { flex: 1; display: flex; flex-direction: column; background-color: #0a0b14; border-right: 1px solid #1f2438; z-index: 2; min-width: 0; }
+        .panel-title { height: 35px; background-color: #141726; display: flex; align-items: center; padding: 0 15px; font-size: 11px; color: #4e5579; border-bottom: 1px solid #1f2438; text-transform: uppercase; font-weight: bold; }
+        .workspace { flex: 1; display: flex; position: relative; }
+        .line-counter { width: 45px; background-color: #0a0b14; border-right: 1px solid #1f2438; text-align: right; padding-right: 12px; padding-top: 15px; color: #313652; user-select: none; line-height: 24px; font-size: 13px; }
+        #editor-textarea { flex: 1; background: transparent; border: none; outline: none; color: #cdd6f4; padding-left: 15px; padding-top: 15px; resize: none; font-size: 13.5px; line-height: 24px; font-family: monospace; white-space: pre; overflow: auto; }
 
-        /* ĐỒ HỌA CHÚ NHỆN CƠ KHÍ */
-        #spider-agent {
-            position: absolute; right: 40px; top: -150px; width: 50px; height: 50px;
-            z-index: 999; pointer-events: none; transition: top 0.4s ease-out;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #spider-agent::before {
-            content: ''; position: absolute; bottom: 35px; left: 50%; width: 1px; height: 1000px; background: rgba(255,255,255,0.15);
-        }
-        .spider-body {
-            width: 20px; height: 26px; background: #ff5555; border-radius: 50%; position: relative;
-            border: 2px solid #ff79c6; box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-        }
-        .spider-body::after {
-            content: ''; position: absolute; bottom: 5px; left: 3px; width: 3px; height: 3px; background: #00ffff; border-radius: 50%;
-            box-shadow: 8px 0 #00ffff;
-        }
-        .spider-leg { position: absolute; width: 20px; height: 2px; background: #ff79c6; top: 50%; transform-origin: left center; transition: 0.3s; }
-        .l1 { left: -18px; transform: rotate(35deg); }
-        .l2 { left: -18px; transform: rotate(0deg); }
-        .l3 { left: -18px; transform: rotate(-35deg); }
-        .r1 { right: -20px; transform: scaleX(-1) rotate(35deg); }
-        .r2 { right: -20px; transform: scaleX(-1) rotate(0deg); }
-        .r3 { right: -20px; transform: scaleX(-1) rotate(-35deg); }
-        
-        /* Hiệu ứng duỗi chân dài ra chỉ điểm dòng lỗi */
-        #spider-agent.active .l2 { width: 65px; transform: rotate(10deg); background: #ff5555; box-shadow: 0 0 5px #ff5555; }
+        /* KHÔNG GIAN ĐỒ HỌA MẠNG NHỆN CRAWLER (CANVAS NẰM LỚP DƯỚI) */
+        .network-panel { width: 420px; background-color: #080911; display: flex; flex-direction: column; position: relative; }
+        #network-canvas { flex: 1; width: 100%; background-color: #080911; cursor: crosshair; }
 
-        /* BONG BÓNG GIAO TIẾP TỰ CHẾ */
-        .spider-bubble {
-            position: absolute; right: 70px; top: -15px; width: 240px; background: #ff5555;
-            color: #fff; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold;
-            line-height: 1.4; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0;
-            transform: scale(0.8); transition: 0.3s; pointer-events: none;
+        /* CON NHỆN CRAWLER NEON TỰ CHẾ */
+        #crawler-spider {
+            position: absolute; width: 24px; height: 24px; z-index: 10;
+            pointer-events: none; opacity: 0; transform: translate(-50%, -50%);
+            transition: left 0.5s cubic-bezier(0.25, 1, 0.5, 1), top 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .spider-bubble::after {
-            content: ''; position: absolute; right: -5px; top: 22px; border-width: 5px 0 5px 5px;
-            border-style: solid; border-color: transparent transparent transparent #ff5555;
+        .spider-node {
+            width: 8px; height: 10px; background: #00f0ff; border-radius: 50%; position: absolute;
+            top: 7px; left: 8px; box-shadow: 0 0 8px #00f0ff;
         }
-        #spider-agent.active .spider-bubble { opacity: 1; transform: scale(1); }
+        /* Tạo hiệu ứng chân nhện crawler tủa ra bằng CSS */
+        .s-leg { position: absolute; width: 10px; height: 1.5px; background: #00f0ff; top: 12px; transform-origin: left center; }
+        .sl1 { left: 2px; transform: rotate(45deg); }
+        .sl2 { left: 2px; transform: rotate(180deg); }
+        .sl3 { left: 2px; transform: rotate(-45deg); }
+        .sr1 { right: 2px; transform: scaleX(-1) rotate(45deg); }
+        .sr2 { right: 2px; transform: scaleX(-1) rotate(180deg); }
+        .sr3 { right: 2px; transform: scaleX(-1) rotate(-45deg); }
 
-        /* Khu vực Console */
-        .console-zone { width: 320px; background-color: #13141f; border-left: 1px solid #292e42; display: flex; flex-direction: column; }
-        .console-header { height: 35px; background-color: #1f2335; border-b: 1px solid #292e42; display: flex; align-items: center; padding: 0 15px; font-size: 11px; color: #565f89; text-transform: uppercase; font-weight: bold; }
-        .console-body { flex: 1; padding: 15px; overflow: auto; color: #73daca; font-size: 13px; line-height: 1.5; }
+        /* Hộp Thông Báo Trạng Thái Đọc Dữ Liệu */
+        #crawler-bubble {
+            position: absolute; background: rgba(0, 240, 255, 0.1); border: 1px solid #00f0ff;
+            color: #00f0ff; font-size: 11px; padding: 6px 10px; border-radius: 4px;
+            pointer-events: none; opacity: 0; transform: translate(-50%, -130%);
+            transition: left 0.5s ease, top 0.5s ease, opacity 0.3s;
+            white-space: nowrap; font-weight: bold; box-shadow: 0 0 8px rgba(0,240,255,0.2);
+            z-index: 11;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">🐍 PYTHON <span>STANDALONE</span></div>
-        <button id="run-btn">Chạy Lệnh</button>
+        <div class="logo">🕸️ Web Crawler <span>Network Lab</span></div>
+        <button id="compile-btn">Phân Tích & Kết Nối</button>
     </header>
 
     <main>
-        <!-- Editor Khu Vực Viết Mã Nguồn -->
-        <section class="editor-zone">
-            <div class="editor-header">MAIN.PY (Bộ Phân Tích Cú Pháp Độc Lập)</div>
-            <div class="code-container">
-                <div class="line-numbers" id="line-box">1</div>
-                <textarea id="code-input" spellcheck="false" placeholder="# Nhập mã nguồn Python tại đây..."></textarea>
-            </div>
-
-            <!-- Mô hình nhện định vị -->
-            <div id="spider-agent">
-                <div class="spider-bubble" id="spider-talk"></div>
-                <div class="spider-leg l1"></div>
-                <div class="spider-leg l2"></div>
-                <div class="spider-leg l3"></div>
-                <div class="spider-leg r1"></div>
-                <div class="spider-leg r2"></div>
-                <div class="spider-leg r3"></div>
-                <div class="spider-body"></div>
+        <!-- Khung Nhập Liệu Code Giả Lập -->
+        <section class="code-panel">
+            <div class="panel-title">main.py (Trình dịch phân tách thực thể)</div>
+            <div class="workspace">
+                <div class="line-counter" id="line-box">1</div>
+                <textarea id="editor-textarea" spellcheck="false" placeholder="# Nhập code để crawler tạo sơ đồ..."></textarea>
             </div>
         </section>
-        <!-- Cột hiển thị bảng log Console -->
-        <section class="console-zone">
-            <div class="console-header">Kết Quả Hệ Thống (Console)</div>
-            <div class="console-body" id="console-log">Sẵn sàng nhận lệnh. Hệ thống hoạt động 100% Offline độc lập.</div>
+
+        <!-- Khung Đồ Họa Sơ Đồ Mạng Lưới Nhện -->
+        <section class="network-panel">
+            <div class="panel-title">Mô phỏng mạng nhện thu thập dữ liệu (Index Graph)</div>
+            
+            <!-- Con nhện Crawler di chuyển động -->
+            <div id="crawler-spider">
+                <div class="spider-node"></div>
+                <div class="s-leg sl1"></div>
+                <div class="s-leg sl2"></div>
+                <div class="s-leg sl3"></div>
+                <div class="s-leg sr1"></div>
+                <div class="s-leg sr2"></div>
+                <div class="s-leg sr3"></div>
+            </div>
+            <!-- Bong bóng hội thoại hiển thị tiến trình quét thực thể -->
+            <div id="crawler-bubble">Mapping...</div>
+
+            <canvas id="network-canvas"></canvas>
         </section>
     </main>
 
     <script>
-        const codeInput = document.getElementById("code-input");
+        const editorTextarea = document.getElementById("editor-textarea");
         const lineBox = document.getElementById("line-box");
-        const consoleLog = document.getElementById("console-log");
-        const spiderAgent = document.getElementById("spider-agent");
-        const spiderTalk = document.getElementById("spider-talk");
+        const canvas = document.getElementById("network-canvas");
+        const ctx = canvas.getContext("2d");
+        const spider = document.getElementById("crawler-spider");
+        const bubble = document.getElementById("crawler-bubble");
 
-        // Cập nhật số dòng tự động khi người dùng gõ
+        let nodes = [];
+        let links = [];
+        let spiderQueue = [];
+        let isSpiderMoving = false;
+
+        // Code mẫu chứa các từ khóa học và tài liệu để Nhện Crawler bò đi kết nối dữ liệu
+        const demoCode = `# Hệ thống phân tích tài liệu và cấu trúc mạng nhện\\nimport sys\\n\\n# Đọc thông tin từ mã định danh bài báo khoa học\\nPMID_1999 = "1999Palgy.42.191"\\nDOI_Link = "doi:10.1111/1475-4983"\\n\\ndef scan_spider_evolution():\\n    print("Đang quét cấu trúc bài viết Selden P.A. 2011")\\n    citation_id = "PMID_21508021"\\n    \\n    if citation_id == "PMID_21508021":\\n        # Kết nối đến cụm dữ liệu Graph mạng lưới\\n        connect_node("Biology_Letters_7")\\n        connect_node("Araneae_Nephilidae")`;
+
+        // Tự động căn chỉnh kích thước màn hình Canvas vẽ mạng lưới
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            drawNetwork();
+        }
+
+        // Cập nhật số dòng gõ văn bản
         function updateLineNumbers() {
-            const lines = codeInput.value.split("\n");
+            const lines = editorTextarea.value.split("\n");
             let numHtml = "";
-            for (let i = 1; i <= lines.length; i++) {
-                numHtml += i + "<br>";
-            }
+            for (let i = 1; i <= lines.length; i++) { numHtml += i + "<br>"; }
             lineBox.innerHTML = numHtml;
         }
 
-        // TỰ ĐỊNH NGHĨA QUY TẮC PHÂN TÍCH CÚ PHÁP PYTHON KHÔNG CẦN LIÊN KẾT NGOÀI
-        function selfCompilePython(code) {
-            const lines = code.split("\n");
-            let openBrackets = 0;
-            let openQuotes = null;
-            let blockIndentLevel = 0;
+        // HÀM VẼ SƠ ĐỒ MẠNG LƯỚI (GRAPH NODES & FILAMENTS)
+        function drawNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < lines.length; i++) {
-                let currentLine = lines[i];
-                let trimmed = currentLine.trim();
-                let lineNum = i + 1;
-
-                if (trimmed === "" || trimmed.startsWith("#")) continue;
-
-                // Quy tắc 1: Kiểm tra cấu trúc đóng mở ngoặc đơn ()
-                for (let char of currentLine) {
-                    if (char === "(") openBrackets++;
-                    if (char === ")") openBrackets--;
+            // 1. Vẽ các đường tơ nhện kết nối giữa các nút (Links)
+            ctx.lineWidth = 1;
+            links.forEach(link => {
+                let fromNode = nodes.find(n => n.id === link.from);
+                let toNode = nodes.find(n => n.id === link.to);
+                if (fromNode && toNode) {
+                    ctx.beginPath();
+                    ctx.moveTo(fromNode.x, fromNode.y);
+                    ctx.lineTo(toNode.x, toNode.y);
+                    ctx.strokeStyle = link.active ? "rgba(0, 240, 255, 0.4)" : "rgba(78, 85, 121, 0.2)";
+                    ctx.stroke();
                 }
-                if (openBrackets < 0) {
-                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Thừa dấu đóng ngoặc đơn ')' mà không có mở ngoặc trước đó!" };
-                }
+            });
 
-                // Quy tắc 2: Kiểm tra cấu trúc đóng mở chuỗi ký tự '' hoặc ""
-                for (let char of currentLine) {
-                    if (char === '"' || char === "'") {
-                        if (openQuotes === char) openQuotes = null;
-                        else if (!openQuotes) openQuotes = char;
-                    }
-                }
-                if (openQuotes) {
-                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Chuỗi văn bản bị hở! Thiếu dấu nháy kết thúc dòng văn bản." };
-                }
+            // 2. Vẽ các nút thắt dữ liệu phát sáng (Nodes)
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+                ctx.fillStyle = node.active ? "#ff007f" : "#242b4b";
+                ctx.shadowBlur = node.active ? 10 : 0;
+                ctx.shadowColor = "#ff007f";
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset hiệu ứng nhòe sáng
 
-                // Quy tắc 3: Kiểm tra cấu trúc rẽ nhánh bắt buộc có dấu hai chấm ':'
-                if (trimmed.startsWith("if ") || trimmed.startsWith("elif ") || trimmed.startsWith("else") || trimmed.startsWith("for ") || trimmed.startsWith("while ") || trimmed.startsWith("def ")) {
-                    if (!trimmed.endsWith(":")) {
-                        return { line: lineNum, msg: "⚠️ Quy tắc cấu trúc: Thiếu dấu hai chấm ':' ở cuối câu lệnh điều kiện/vòng lặp." };
-                    }
+                // Vẽ vòng tròn viền ngoài cho Node hoạt động
+                if (node.active) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2);
+                    ctx.strokeStyle = "rgba(0, 240, 255, 0.6)";
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
                 }
 
-                // Quy tắc 4: Kiểm tra logic thụt lề (Indentation Rules) sau khối lệnh chứa dấu ':'
-                let spacesCount = currentLine.search(/\S/);
-                if (blockIndentLevel > 0 && spacesCount < blockIndentLevel && trimmed !== "") {
-                    // Nếu dòng trước yêu cầu thụt lề mà dòng này không thụt lề
-                    if (spacesCount === 0) {
-                        return { line: lineNum, msg: "⚠️ Lỗi Thụt Lề (Indentation): Câu lệnh này bắt buộc phải lùi vào (ấn Tab hoặc 4 dấu cách)!" };
-                    }
-                }
-
-                // Cập nhật mức độ thụt lề mong đợi cho dòng tiếp theo
-                if (trimmed.endsWith(":")) {
-                    blockIndentLevel = (spacesCount === -1 ? 0 : spacesCount) + 4;
-                } else if (trimmed !== "") {
-                    blockIndentLevel = spacesCount;
-                }
-            }
-
-            if (openBrackets > 0) {
-                return { line: lines.length, msg: "⚠️ Cú pháp lỗi: Quên chưa đóng ngoặc đơn ')' ở cuối chương trình!" };
-            }
-
-            return null; // Không có lỗi
+                // In nhãn text hiển thị tên thực thể dữ liệu cạnh nút
+                ctx.fillStyle = node.active ? "#cdd6f4" : "#4e5579";
+                ctx.font = "10px monospace";
+                ctx.fillText(node.label, node.x + 12, node.y + 4);
+            });
         }
 
-        // ĐIỀU KHIỂN ĐỊNH VỊ TỌA ĐỘ VÀ GIAO TIẾP CHO NHỆN
-        function runSyntaxCheck() {
-            const code = codeInput.value;
-            const error = selfCompilePython(code);
-
-            if (!error) {
-                // Code chuẩn quy tắc: Nhện bò lên ẩn đi
-                spiderAgent.classList.remove("active");
-                spiderAgent.style.top = "-150px";
+        // THUẬT TOÁN ĐIỀU KHIỂN CON NHỆN DI CHUYỂN TỪNG BƯỚC THEO HÀNG ĐỢI (QUEUE CRAWL)
+        function processSpiderQueue() {
+            if (spiderQueue.length === 0) {
+                isSpiderMoving = false;
+                // Kết thúc tiến trình: Nhện mờ đi ẩn mình
+                setTimeout(() => {
+                    if (!isSpiderMoving) { spider.style.opacity = "0"; bubble.style.opacity = "0"; }
+                }, 1000);
                 return;
             }
 
-            // Tính toán khoảng cách tọa độ hiển thị từng dòng (mỗi dòng cao 24px + 15px padding đầu)
-            const rowHeight = 24;
-            const paddingTop = 50; // Khớp với Header và Panel Header bên ngoài
-            const spiderTargetTop = ((error.line - 1) * rowHeight) + paddingTop;
+            isSpiderMoving = true;
+            let currentTarget = spiderQueue.shift();
+            let targetNode = nodes.find(n => n.id === currentTarget.nodeId);
 
-            // Kích hoạt nhện di chuyển và mở bong bóng thoại chỉ điểm
-            spiderTalk.innerText = `Dòng ${error.line}:\n\n` + error.msg;
-            spiderAgent.style.top = spiderTargetTop + "px";
+            if (targetNode) {
+                // Hiển thị nhện và di chuyển tọa độ mượt mà đến nút thắt
+                spider.style.opacity = "1";
+                bubble.style.opacity = "1";
+                spider.style.left = targetNode.x + "px";
+                spider.style.top = targetNode.y + "px";
+
+                bubble.style.left = targetNode.x + "px";
+                bubble.style.top = targetNode.y + "px";
+                bubble.innerText = `Crawl: ${currentTarget.type} -> ${targetNode.label}`;
+
+                // Kích hoạt phát sáng nút thắt và sợi tơ liên kết khi nhện bò qua
+                setTimeout(() => {
+                    targetNode.active = true;
+                    let incomingLink = links.find(l => l.to === targetNode.id);
+                    if (incomingLink) incomingLink.active = true;
+                    drawNetwork();
+
+                    // Tiếp tục bò sang nút thắt dữ liệu tiếp theo trong hàng đợi
+                    setTimeout(processSpiderQueue, 600);
+                }, 500);
+            } else {
+                processSpiderQueue();
+            }
+        }
+
+        // LOGIC PHÂN TÍCH TỪ KHÓA MÃ NGUỒN ĐỂ THIẾT LẬP GRAPH VÀ KÍCH HOẠT NHỆN
+        function analyzeAndBuildGraph() {
+            const codeText = editorTextarea.value;
             
-            setTimeout(() => {
-                spiderAgent.classList.add("active");
-            }, 50);
+            // Khởi tạo ngẫu nhiên vị trí các Node thắt dữ liệu trên không gian đồ họa
+            nodes = [
+                { id: "root", label: "MAIN.PY", x: 60, y: 80, size: 5, active: true },
+                { id: "pmid", label: "PMID:1999Palgy", x: 220, y: 60, size: 4, active: false },
+                { id: "doi", label: "DOI:10.1111", x: 340, y: 110, size: 4, active: false },
+                { id: "citation", label: "PMC:3169061", x: 150, y: 180, size: 4, active: false },
+                { id: "journal", label: "Biology_Letters_7", x: 280, y: 240, size: 4, active: false },
+                { id: "family", label: "Araneae:Nephilidae", x: 120, y: 310, size: 4, active: false }
+            ];
+
+            // Thiết lập cấu trúc đường tơ liên kết (Edges) hình dáng mạng nhện hình học
+            links = [
+                { from: "root", to: "pmid", active: false },
+                { from: "pmid", to: "doi", active: false },
+                { from: "root", to: "citation", active: false },
+                { from: "citation", to: "journal", active: false },
+                { from: "citation", to: "family", active: false }
+            ];
+
+            // Đặt lại trạng thái mạng ban đầu và quét từ khóa để thêm việc cho nhện bò
+            spiderQueue = [];
+            drawNetwork();
+
+            if (codeText.includes("1999Palgy")) {
+                spiderQueue.push({ nodeId: "pmid", type: "STRING" });
+            }
+            if (codeText.includes("doi:")) {
+                spiderQueue.push({ nodeId: "doi", type: "LINK" });
+            }
+            if (codeText.includes("PMID_21508021")) {
+                spiderQueue.push({ nodeId: "citation", type: "IDENTIFIER" });
+            }
+            if (codeText.includes("Biology_Letters_7")) {
+                spiderQueue.push({ nodeId: "journal", type: "NODE_CONNECT" });
+            }
+            if (codeText.includes("Araneae_Nephilidae")) {
+                spiderQueue.push({ nodeId: "family", type: "STRUCT_DATA" });
+            }
+
+            // Nếu phát hiện có thực thể dữ liệu trong mã nguồn, ra lệnh cho nhện xuất kích bò đi dệt tơ
+            if (spiderQueue.length > 0 && !isSpiderMoving) {
+                // Đặt nhện xuất phát từ vị trí Nút Gốc (main.py)
+                spider.style.opacity = "1";
+                spider.style.left = nodes[0].x + "px";
+                spider.style.top = nodes[0].y + "px";
+                
+                setTimeout(processSpiderQueue, 400);
+            }
         }
 
-        // Xử lý nút Chạy lệnh giả lập cơ bản
-        document.getElementById("run-btn").onclick = () => {
-            const code = codeInput.value;
-            const error = selfCompilePython(code);
-
-            if (error) {
-                consoleLog.innerHTML = `<span style="color: #f7768e;">[LỖI CÚ PHÁP KHÔNG THỂ CHẠY]:<br>Hãy sửa lại theo hướng dẫn của Nhện ở dòng ${error.line}.</span>`;
-                return;
-            }
-
-            // Giả lập xử lý hàm xuất dữ liệu print cơ bản trong JS thuần
-            if (code.includes("print(")) {
-                let matches = code.match(/print\((['"])(.*?)\1\)/g);
-                if (matches) {
-                    let results = matches.map(m => m.replace(/print\((['"])/, "").replace(/(['"])\)/, ""));
-                    consoleLog.innerHTML = results.join("<br>");
-                    return;
-                }
-            }
-            consoleLog.innerHTML = "Chương trình thực thi thành công (Không có lệnh in dữ liệu ra ngoài).";
-        };
-
-        // Theo dõi sự kiện nhập phím của người dùng
-        let timer;
-        codeInput.addEventListener("input", () => {
+        // Đăng ký các trình lắng nghe tương tác người dùng
+        document.getElementById("compile-btn").onclick = analyzeAndBuildGraph;
+        
+        editorTextarea.addEventListener("input", () => {
             updateLineNumbers();
-            clearTimeout(timer);
-            // Quét lỗi sau khi dừng gõ 300ms
-            timer = setTimeout(runSyntaxCheck, 300);
         });
 
-        // Giữ đồng bộ cuộn màn hình giữa dòng số và khung gõ
-        codeInput.addEventListener("scroll", () => {
-            lineBox.scrollTop = codeInput.scrollTop;
+        editorTextarea.addEventListener("scroll", () => {
+            lineBox.scrollTop = editorTextarea.scrollTop;
         });
 
-        // Kích hoạt khởi chạy mặc định ban đầu
+        window.addEventListener("resize", resizeCanvas);
+
+        // Nạp mã nguồn mẫu ban đầu khi ứng dụng sẵn sàng
         window.addEventListener("DOMContentLoaded", () => {
+            editorTextarea.value = demoCode;
             updateLineNumbers();
+            setTimeout(resizeCanvas, 100);
         });
     </script>
 </body>
