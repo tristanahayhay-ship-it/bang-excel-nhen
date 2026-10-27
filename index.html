@@ -1,20 +1,16 @@
-body, html {
-    margin: 0;
-    padding: 0;
-    background-color: #111;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: Arial, sans-serif;
-}
-
-#game-container {
-    border: 4px solid #ff0000;
-    box-shadow: 0 0 20px #ff0000;
-}
-
-canvas {
-    background-color: #000;
-    display: block;
-}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contra 2D Mini Test</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Nơi vẽ toàn bộ đồ họa game Contra -->
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
