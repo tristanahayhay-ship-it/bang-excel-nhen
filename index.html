@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Lập Trình Python</title>
-    <!-- Tailwind CSS -->
+    <title>Online Python Compiler (Interpreter)</title>
+    <!-- Tailwind CSS v4 -->
     <script src="https://jsdelivr.net"></script>
     <!-- CodeMirror CSS -->
     <link rel="stylesheet" href="https://cloudflare.com">
@@ -12,193 +12,143 @@
     <!-- CodeMirror JS -->
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
-    <!-- Pyodide (Python in Browser) -->
+    <!-- Pyodide Core Framework -->
     <script src="https://jsdelivr.net"></script>
-    <style>
-        .CodeMirror { height: 100%; font-family: 'Fira Code', monospace, Consolas, Courier; font-size: 15px; border-radius: 0.5rem; }
+    <style type="text/tailwindcss">
+        @theme {
+            --color-pg-blue: #24293e;
+            --color-pg-dark: #1e2235;
+            --color-pg-btn: #3e445e;
+            --color-pg-run: #2b5bf7;
+            --color-pg-run-hover: #1e4bd6;
+        }
+        .CodeMirror { 
+            height: 100%; 
+            font-family: 'Fira Code', Menlo, Monaco, Consolas, monospace; 
+            font-size: 15px; 
+            background: #1e2235 !important;
+        }
+        .CodeMirror-gutter { background: #1e2235 !important; border-right: 1px solid #2d324d !important; }
+        .CodeMirror-linenumbers { color: #5c6370 !important; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 flex flex-col h-screen overflow-hidden">
+<body class="bg-pg-blue text-gray-200 flex flex-col h-screen overflow-hidden m-0 p-0 font-sans selection:bg-blue-600/30">
 
-    <!-- Header -->
-    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-md">
-        <div class="flex items-center space-x-3">
-            <span class="text-2xl">🐍</span>
-            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-yellow-400 to-blue-400 bg-clip-text text-transparent">Học Python Trực Tuyến</h1>
+    <!-- Top Navigation Bar -->
+    <header class="h-14 bg-pg-blue border-b border-[#2d324d] px-6 flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl font-black text-white tracking-wider">Programiz</span>
+            <span class="text-xs bg-[#3a3f58] text-gray-300 px-1.5 py-0.5 rounded font-mono font-bold">PYTHON</span>
         </div>
-        <div class="flex items-center space-x-4">
-            <div id="status" class="flex items-center space-x-2 text-sm text-yellow-400">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-                <span>Đang tải môi trường Python...</span>
+        <div class="flex items-center space-x-3">
+            <div id="status" class="text-xs font-mono text-yellow-400 mr-2 flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                Loading Python...
             </div>
-            <button id="run-btn" disabled class="px-5 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-400 font-medium rounded-lg shadow transition duration-200 cursor-pointer disabled:cursor-not-allowed">
-                ▶ Chạy Code
+            <button id="run-btn" disabled class="h-9 px-5 bg-pg-run hover:bg-pg-run-hover disabled:bg-[#32364c] text-white font-semibold text-sm rounded shadow transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center space-x-1">
+                <span>Run</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex flex-1 overflow-hidden">
-        <!-- Left Sidebar: Lessons -->
-        <section class="w-80 bg-gray-800/50 border-r border-gray-700 flex flex-col">
-            <div class="p-4 border-b border-gray-700 bg-gray-800">
-                <h2 class="font-semibold text-gray-300">Danh sách bài học</h2>
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-pg-dark">
+        <!-- Left Panel: main.py Editor -->
+        <section class="flex-1 flex flex-col min-w-0 border-b md:border-b-0 md:border-r border-[#2d324d]">
+            <div class="h-10 bg-pg-blue flex items-center justify-between px-4 border-b border-[#2d324d]">
+                <div class="flex items-center space-x-1 border-b-2 border-pg-run h-full px-2 mt-[2px]">
+                    <span class="text-xs font-mono font-bold text-white tracking-wide">main.py</span>
+                </div>
+                <button id="clear-btn" class="text-xs text-gray-400 hover:text-white transition font-medium cursor-pointer">Clear</button>
             </div>
-            <div id="lesson-list" class="flex-1 overflow-y-auto p-2 space-y-1">
-                <!-- Lessons injected via JS -->
+            <div class="flex-1 relative overflow-hidden">
+                <textarea id="code-editor"></textarea>
             </div>
         </section>
-
-        <!-- Right Core Area: Editor & Output -->
-        <section class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-gray-950">
-            <!-- Editor Pane -->
-            <div class="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-800 h-1/2 lg:h-full">
-                <div class="bg-gray-900 px-4 py-2 border-b border-gray-800 text-xs font-mono text-gray-400 flex justify-between items-center">
-                    <span>MAIN.PY</span>
-                    <button id="reset-btn" class="hover:text-white transition cursor-pointer">🔄 Reset bài học</button>
-                </div>
-                <div class="flex-1 relative overflow-hidden">
-                    <textarea id="code-editor"></textarea>
-                </div>
+        <!-- Right Panel: Output Console -->
+        <section class="w-full md:w-1/2 flex flex-col min-w-0 bg-[#151824]">
+            <div class="h-10 bg-[#1a1d29] flex items-center px-4 border-b border-[#2d324d]">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Output</span>
             </div>
-
-            <!-- Guide & Output Pane -->
-            <div class="w-full lg:w-96 flex flex-col h-1/2 lg:h-full bg-gray-900">
-                <!-- Guide Segment -->
-                <div class="flex-1 p-5 overflow-y-auto border-b border-gray-800">
-                    <h3 id="lesson-title" class="text-lg font-bold text-yellow-400 mb-2">---</h3>
-                    <div id="lesson-guide" class="text-sm text-gray-300 space-y-2 leading-relaxed">
-                        Chọn một bài học ở danh sách bên trái để bắt đầu.
-                    </div>
-                </div>
-                <!-- Output Segment -->
-                <div class="h-48 flex flex-col bg-black">
-                    <div class="bg-gray-950 px-4 py-1.5 text-xs font-mono text-gray-500 uppercase tracking-wider border-b border-gray-800">
-                        Kết quả hiển thị (Console)
-                    </div>
-                    <pre id="output" class="flex-1 p-4 font-mono text-sm text-green-400 overflow-auto whitespace-pre-wrap selection:bg-gray-800">Khởi tạo trình biên dịch...</pre>
-                </div>
+            <div class="flex-1 p-5 font-mono text-sm leading-relaxed overflow-auto select-text">
+                <pre id="output" class="text-[#a6accd] whitespace-pre-wrap">Preparing compiler workspace...</pre>
             </div>
         </section>
     </main>
+
     <script>
-        const lessons = [
-            {
-                id: 1,
-                title: "1. Hello World",
-                guide: "Chào mừng bạn đến với Python! Hãy dùng hàm <code>print()</code> để xuất một chuỗi văn bản ra màn hình.<br><br><strong>Nhiệm vụ:</strong> Nhấn nút <strong>Chạy Code</strong> để xem kết quả xuất hiện ở Console bên dưới.",
-                defaultCode: '# Sử dụng hàm print để xuất dữ liệu\\nprint("Hello World!")\\nprint("Chào mừng bạn đến với Python!")'
-            },
-            {
-                id: 2,
-                title: "2. Biến số (Variables)",
-                guide: "Biến là nơi dùng để lưu trữ dữ liệu. Trong Python, bạn không cần khai báo kiểu dữ liệu, chỉ cần gán giá trị bằng dấu bằng (<code>=</code>).<br><br><strong>Nhiệm vụ:</strong> Thay đổi giá trị của biến <code>ten</code> và <code>tuoi</code> rồi chạy lại chương trình.",
-                defaultCode: '# Khai báo biến\\nten = "Nguyễn Văn A"\\ntuoi = 18\\n\\n# Sử dụng biến\\nprint("Xin chào,", ten)\\nprint("Tuổi của bạn là:", tuoi)'
-            },
-            {
-                id: 3,
-                title: "3. Câu điều kiện (If-Else)",
-                guide: "Cấu trúc điều kiện giúp chương trình đưa ra quyết định. Hãy chú ý dấu hai chấm (<code>:</code>) và việc thụt lề thụt dòng (Indentation) bắt buộc trong Python.<br><br><strong>Nhiệm vụ:</strong> Thử sửa giá trị của biến <code>diem</code> thành 4 và xem kết quả thay đổi ra sao.",
-                defaultCode: 'diem = 8\\n\\nif diem >= 5:\\n    print("Chúc mừng, bạn đã ĐẠT!")\\nelse:\\n    print("Rất tiếc, bạn đã TRƯỢT!")'
-            },
-            {
-                id: 4,
-                title: "4. Vòng lặp For (Loops)",
-                guide: "Vòng lặp <code>for</code> kết hợp hàm <code>range(n)</code> giúp bạn lặp đi lặp lại một khối lệnh <code>n</code> lần (chạy từ 0 đến n-1).<br><br><strong>Nhiệm vụ:</strong> Thay đổi số trong <code>range()</code> để lặp số lần bạn muốn.",
-                defaultCode: '# Vòng lặp chạy 5 lần (từ 0 đến 4)\\nfor i in range(5):\\n    print("Lần lặp thứ:", i)'
-            }
-        ];
-
         let pyodideInstance = null;
-        let currentLessonId = 1;
+        const defaultPythonCode = `# Online Python compiler (interpreter) to run Python online.\\n# Write Python 3 code in this online editor and run it.\\n\\nprint("Hello world")`;
 
-        // Initialize CodeMirror
+        // Initialize CodeMirror Editor
         const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             mode: "python",
             theme: "dracula",
             lineNumbers: true,
             indentUnit: 4,
             matchBrackets: true,
-            autoCloseBrackets: true
+            autoCloseBrackets: true,
+            lineWrapping: true
         });
+        editor.setValue(defaultPythonCode);
 
-        // Initialize Pyodide
+        // Core Environment Setup (WebAssembly Runtime)
         async function initPyodide() {
             try {
                 pyodideInstance = await loadPyodide();
                 document.getElementById("status").innerHTML = `
-                    <span class="flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
-                    <span class="text-green-400">Python Sẵn Sàng</span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-green-400"></span>
+                    <span class="text-green-400 text-xs">Ready</span>
                 `;
                 document.getElementById("run-btn").disabled = false;
-                document.getElementById("output").textContent = "Môi trường đã chuẩn bị xong. Viết code và chạy thử nhé!";
+                document.getElementById("output").textContent = 'Python 3 environment active. Click "Run" to execute code.';
             } catch (err) {
-                document.getElementById("output").textContent = "Lỗi khởi tạo môi trường Python: " + err;
+                document.getElementById("output").textContent = "Error setting up environment:\\n" + err;
             }
         }
 
-        // Render Sidebar
-        function renderLessons() {
-            const listContainer = document.getElementById("lesson-list");
-            listContainer.innerHTML = "";
-            lessons.forEach(lesson => {
-                const btn = document.createElement("button");
-                btn.className = `w-full text-left px-4 py-2.5 rounded-md text-sm font-medium transition cursor-pointer \${
-                    lesson.id === currentLessonId 
-                    ? "bg-blue-600 text-white shadow" 
-                    : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
-                }`;
-                btn.textContent = lesson.title;
-                btn.onclick = () => selectLesson(lesson.id);
-                listContainer.appendChild(btn);
-            });
-        }
-
-        // Load specific lesson data
-        function selectLesson(id) {
-            currentLessonId = id;
-            const lesson = lessons.find(l => l.id === id);
-            document.getElementById("lesson-title").innerHTML = lesson.title;
-            document.getElementById("lesson-guide").innerHTML = lesson.guide;
-            editor.setValue(lesson.defaultCode.replace(/\\\\n/g, '\\n'));
-            renderLessons();
-        }
-
-        // Run python code
+        // Stream Interception Logic
         async function runCode() {
             if (!pyodideInstance) return;
             
             const outputElement = document.getElementById("output");
-            outputElement.textContent = "Đang chạy...";
+            outputElement.textContent = ""; 
             
             let outputBuffer = "";
             pyodideInstance.setStdout({
-                batched: (str) => { outputBuffer += str + "\\n"; }
+                batched: (str) => { 
+                    outputBuffer += str + "\\n"; 
+                    outputElement.textContent = outputBuffer;
+                }
             });
             pyodideInstance.setStderr({
-                batched: (str) => { outputBuffer += str + "\\n"; }
+                batched: (str) => { 
+                    outputBuffer += str + "\\n"; 
+                    outputElement.textContent = outputBuffer;
+                }
             });
 
             try {
                 const code = editor.getValue();
                 await pyodideInstance.runPythonAsync(code);
-                outputElement.textContent = outputBuffer || "Chương trình chạy thành công (Không có kết quả in ra).";
+                if (!outputBuffer) {
+                    outputElement.textContent = "Chương trình chạy thành công (Không có dữ liệu in ra).";
+                }
             } catch (err) {
                 outputElement.textContent = err.message;
             }
         }
 
-        // Event Listeners
+        // DOM Event Binding
         document.getElementById("run-btn").onclick = runCode;
-        document.getElementById("reset-btn").onclick = () => selectLesson(currentLessonId);
+        document.getElementById("clear-btn").onclick = () => {
+            editor.setValue("");
+            editor.focus();
+        };
 
-        // Bootstrap Application
+        // Bootstrap App Execution
         window.addEventListener("DOMContentLoaded", () => {
             initPyodide();
-            selectLesson(currentLessonId);
         });
     </script>
 </body>
