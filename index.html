@@ -3,282 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Robot AI Xử Lý Đa Dữ Liệu</title>
+    <title>Bug Spider Hunter - Web Crawler Edition</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #f0f2f5; color: #333;
-        }
-        #top-bar {
-            height: 55px; background-color: #1a73e8; color: white;
-            display: flex; align-items: center; padding: 0 20px;
-            font-size: 18px; font-weight: bold; justify-content: space-between;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.15);
-        }
-        #main-container {
-            position: absolute; top: 55px; bottom: 0; left: 0; right: 0;
-            display: flex; padding: 20px; gap: 20px; box-sizing: border-box;
-        }
-        /* Khung bên trái: Ra lệnh và nạp đa dữ liệu */
-        #input-zone {
-            flex: 1; display: flex; flex-direction: column; gap: 12px;
-            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow-y: auto;
-        }
-        /* Khung bên phải: Bảng kết quả sạch từ Robot */
-        #output-zone {
-            flex: 1.2; display: flex; flex-direction: column; gap: 15px;
-            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .section-title { font-size: 14px; font-weight: bold; color: #444; display: flex; align-items: center; gap: 6px; }
-        .api-input { width: 100%; padding: 8px; border: 1px solid #1a73e8; border-radius: 4px; box-sizing: border-box; }
-        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccd0d5; border-radius: 6px; resize: none; font-family: monospace; font-size: 13px; box-sizing: border-box; outline: none; }
-        textarea:focus { border-color: #1a73e8; }
-        
-        /* Cấu hình vùng tải File/Ảnh */
-        .upload-wrapper {
-            border: 2px dashed #1a73e8; padding: 15px; border-radius: 6px;
-            background-color: #f8fafc; text-align: center; cursor: pointer; position: relative;
-        }
-        .upload-wrapper:hover { background-color: #f1f5f9; }
-        #file-input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        #file-status { font-size: 13px; color: #475569; font-weight: 500; margin-top: 5px; display: block; }
-        
-        .btn { background-color: #1a73e8; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
-        .btn:hover { background-color: #1557b0; }
-        #export-btn { background-color: #107c41; display: none; }
-        #export-btn:hover { background-color: #0b592e; }
-        
-        #table-wrapper { flex: 1; overflow: auto; border: 1px solid #dee2e6; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        th { background-color: #f8f9fa; padding: 10px; border-bottom: 2px solid #dee2e6; color: #5f6368; font-weight: 600; position: sticky; top: 0; }
-        td { padding: 10px; border-bottom: 1px solid #dee2e6; white-space: nowrap; }
-        tr:hover { background-color: #f8f9fa; }
-        #status-msg { font-size: 13px; font-style: italic; color: #65676b; line-height: 1.4; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #0f141c; color: #e1e4e8; font-family: 'Fira Code', Consolas, Monaco, monospace; overflow: hidden; }
+        #app-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        header { background: #161b22; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; z-index: 10; }
+        h1 { margin: 0; font-size: 16px; font-weight: 600; color: #58a6ff; display: flex; align-items: center; gap: 8px; }
+        #status { font-size: 13px; color: #8b949e; padding: 4px 8px; border-radius: 4px; background: #21262d; }
+        .status-ok { color: #56d364 !important; }
+        .status-error { color: #f85149 !important; }
+        #workspace { flex: 1; position: relative; width: 100%; }
+        #code-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: #e1e4e8; border: none; padding: 25px; font-family: inherit; font-size: 15px; line-height: 1.6; outline: none; resize: none; z-index: 1; caret-color: #58a6ff; white-space: pre; overflow: auto; }
+        #spider-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
     </style>
+    <!-- Tích hợp thư viện Acorn Parser để bắt lỗi cú pháp JavaScript -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
-    <div id="top-bar">
-        <span>🤖 Trung Tâm Robot AI Xử Lý Đa Dữ Liệu (Chữ - Ảnh - Tệp Tin)</span>
-    </div>
-
-    <div id="main-container">
-        <!-- KHUNG ĐIỀU HÀNH BÊN TRÁI -->
-        <div id="input-zone">
-            <div class="api-config">
-                <div class="section-title">🔑 Bước 1: Nhập mã khóa bí mật (Gemini Key):</div>
-                <input type="password" id="api-key-field" class="api-input" placeholder="Dán mã Gemini API Key vào đây...">
-            </div>
-            
-            <div class="section-title">📎 Bước 2: Đính kèm Hình ảnh hoặc Tệp dữ liệu (Tùy chọn):</div>
-            <div class="upload-wrapper">
-                <span style="font-size: 24px;">📁</span>
-                <span id="file-status">Bấm vào đây để chọn Ảnh chụp hoặc File dữ liệu từ máy...</span>
-                <input type="file" id="file-input" accept="image/*,.csv,.txt,.xlsx" onchange="processLocalFile()">
-            </div>
-
-            <div class="section-title">✍️ Bước 3: Dán dữ liệu chữ thô (Nếu không tải tệp):</div>
-            <textarea id="raw-data-input" placeholder="Dán văn bản lộn xộn hoặc danh sách trùng lặp vào đây..."></textarea>
-            
-            <div class="section-title">💬 Bước 4: Nhập câu lệnh yêu cầu Robot xử lý:</div>
-            <input type="text" id="ai-command" class="api-input" style="padding: 11px;" placeholder="Ví dụ: Lọc trùng lặp, tách họ tên và số điện thoại, tính tổng ở cuối...">
-            
-            <button class="btn" onclick="askRobotToExecute()">🚀 Phát Lệnh Cho Robot Thao Tác</button>
-        </div>
-
-        <!-- KHUNG KẾT QUẢ BÊN PHẢI -->
-        <div id="output-zone">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="section-title">✨ Bảng dữ liệu sạch do Robot tự thao tác dựng lên:</div>
-                <button class="btn" id="export-btn" onclick="exportDataToCSV()">📥 Xuất Báo Cáo Excel (.csv)</button>
-            </div>
-            
-            <div id="status-msg">Hệ thống đang chờ lệnh. Hãy nạp dữ liệu và ghi yêu cầu ở khung bên trái.</div>
-            
-            <div id="table-wrapper">
-                <table id="result-table">
-                    <thead id="table-head"></thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
+    <div id="app-container">
+        <header>
+            <h1>🕷️ Bug Spider Hunter <span style="font-size: 11px; color:#8b949e; font-weight:normal;">(GitHub Pages MVP)</span></h1>
+            <div id="status" class="status-ok">✔ Code hợp lệ. Nhện đang ngủ...</div>
+        </header>
+        <div id="workspace">
+            <textarea id="code-input" spellcheck="false" placeholder="// Hãy dán hoặc viết code JavaScript vào đây.&#10;// Hãy thử cố tình viết sai cú pháp (ví dụ: thiếu dấu ngoặc, gõ sai từ khóa) để gọi nhện!&#10;&#10;function helloWorld() {&#10;    console.log('Xin chào!')&#10;}"></textarea>
+            <canvas id="spider-canvas"></canvas>
         </div>
     </div>
-    <script>
-        let selectedFileBase64 = null;
-        let selectedFileType = null;
-        let extractedTextFromFile = ""; // Lưu nội dung nếu người dùng tải tệp văn bản/CSV
 
-        let globalHeaders = [];
-        let globalRows = [];
-
-        // Hàm tự động nhận diện và xử lý loại tệp người dùng tải lên
-        function processLocalFile() {
-            const fileInput = document.getElementById('file-input');
-            const fileStatus = document.getElementById('file-status');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                selectedFileBase64 = null; selectedFileType = null; extractedTextFromFile = "";
-                fileStatus.innerText = "Bấm vào đây để chọn Ảnh chụp hoặc File dữ liệu từ máy...";
-                return;
-            }
-
-            fileStatus.innerText = `📎 Đã nạp: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-            selectedFileType = file.type;
-
-            const reader = new FileReader();
-
-            // Kịch bản A: Nếu là HÌNH ẢNH -> Mã hóa sang chuỗi Base64 để gửi Robot quét mắt thị giác
-            if (file.type.startsWith('image/')) {
-                extractedTextFromFile = "";
-                reader.onload = function (e) {
-                    selectedFileBase64 = e.target.result.split(',')[1];
-                };
-                reader.readAsDataURL(file);
-            } 
-            // Kịch bản B: Nếu là FILE VĂN BẢN (TXT, CSV) -> Đọc trực tiếp chữ bên trong file
-            else {
-                selectedFileBase64 = null;
-                reader.onload = function (e) {
-                    extractedTextFromFile = e.target.result;
-                };
-                reader.readAsText(file, "UTF-8");
-            }
-        }
-        // Hàm tổng hợp toàn bộ dữ liệu (Chữ, Ảnh, File) để ra lệnh cho Robot Gemini thực thi
-        async function askRobotToExecute() {
-            const apiKey = document.getElementById('api-key-field').value.trim();
-            const textInputData = document.getElementById('raw-data-input').value.trim();
-            const command = document.getElementById('ai-command').value.trim();
-            const statusMsg = document.getElementById('status-msg');
-
-            if (!apiKey) return alert("Vui lòng điền mã khóa Gemini API Key vào ô cấu hình!");
-            if (!command) return alert("Vui lòng nhập câu lệnh yêu cầu Robot!");
-            
-            // Xác định nguồn dữ liệu đầu vào (Ưu tiên File tải lên trước, dữ liệu ô nhập sau)
-            let finalDataToProcess = extractedTextFromFile || textInputData;
-            if (!finalDataToProcess && !selectedFileBase64) {
-                return alert("Vui lòng cung cấp ít nhất một nguồn dữ liệu: Hoặc dán chữ, hoặc tải file, hoặc đính kèm ảnh!");
-            }
-
-            statusMsg.innerText = "🤖 Robot đang mở phân tích đa phương thức: Đọc dữ liệu, lọc bỏ các dòng trùng lặp và đồng bộ cấu trúc cột...";
-            statusMsg.style.color = "#1a73e8";
-
-            document.getElementById('table-head').innerHTML = "";
-            document.getElementById('table-body').innerHTML = "";
-            document.getElementById('export-btn').style.display = "none";
-
-            try {
-                // Chỉ thị hệ thống bắt buộc ép Gemini chuyển dịch mọi dạng dữ liệu thô về bảng JSON
-                const systemPrompt = `Bạn là Robot tối cao chuyên xử lý và tinh chế dữ liệu lớn. Bạn sẽ nhận được yêu cầu xử lý từ người dùng kèm theo một trong các nguồn dữ liệu (văn bản thô, file văn bản, hoặc hình ảnh chứa bảng biểu).
-Nhiệm vụ của bạn là đọc hiểu dữ liệu đó, thực hiện chính xác câu lệnh của họ (Ví dụ: lọc bỏ các hàng trùng lặp, dọn dẹp hàng lỗi rác, tính tổng tính trung bình, phân tách thông tin thành các cột hợp lý...).
-Sau đó, xuất kết quả DUY NHẤT dưới dạng cấu trúc chuỗi JSON sạch gồm 2 thuộc tính:
-1. "headers": Mảng tên tiêu đề các cột dữ liệu.
-2. "rows": Mảng chứa các hàng dữ liệu sạch tương ứng (mỗi hàng là một mảng các ô trị).
-Tuyệt đối không giải thích dông dài, không viết chữ tiếng Việt ở ngoài khối JSON, không bọc ký tự bọc mã \`\`\`json. Chỉ trả về đúng chuỗi JSON hợp lệ.`;
-
-                // Đóng gói mảng dữ liệu đa phương thức (Parts) theo đúng giao thức của Google AI Studio
-                let partsPayload = [];
-                
-                // Nạp văn bản yêu cầu và dữ liệu chữ vào gói tin
-                let textContext = `Yêu cầu thao tác: ${command}\n\n`;
-                if (finalDataToProcess) {
-                    textContext += `Dữ liệu chữ kèm theo:\n${finalDataToProcess}`;
-                }
-                partsPayload.push({ text: systemPrompt });
-                partsPayload.push({ text: textContext });
-
-                // Nếu có hình ảnh đính kèm, chèn object inlineData chứa chuỗi Base64 của ảnh vào gói tin
-                if (selectedFileBase64) {
-                    partsPayload.push({
-                        inlineData: {
-                            mimeType: selectedFileType,
-                            data: selectedFileBase64
-                        }
-                    });
-                }
-
-                // Gọi Endpoint chính thức của Google Gemini 2.5 Flash
-                const url = `https://googleapis.com{apiKey}`;
-                
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: partsPayload }] })
-                });
-
-                const resData = await response.json();
-                if (resData.error) throw new Error(resData.error.message);
-
-                let aiTextResponse = resData.candidates.content.parts.text.trim();
-                
-                // Làm sạch chuỗi JSON phòng trường hợp AI tự thêm ký tự bao bọc
-                if (aiTextResponse.includes("```")) {
-                    aiTextResponse = aiTextResponse.replace(/```json|```/g, "").trim();
-                }
-
-                const parsedResult = JSON.parse(aiTextResponse);
-                globalHeaders = parsedResult.headers || [];
-                globalRows = parsedResult.rows || [];
-
-                if (globalHeaders.length === 0) {
-                    statusMsg.innerText = "❌ Robot đọc dữ liệu thành công nhưng không thể phân bổ thành các cột. Hãy viết câu lệnh rõ ràng hơn!";
-                    statusMsg.style.color = "red";
-                    return;
-                }
-
-                // Vẽ dữ liệu sạch lên bảng hiển thị
-                renderResultTable(globalHeaders, globalRows);
-                statusMsg.innerText = `✅ Thao tác thành công! Robot đã lọc sạch dữ liệu và tạo bảng gồm ${globalRows.length} hàng dữ liệu chuẩn.`;
-                statusMsg.style.color = "#107c41";
-                document.getElementById('export-btn').style.display = "block";
-
-            } catch (error) {
-                statusMsg.innerText = "❌ Lỗi: Robot không thể phân tích được tệp/hình ảnh này. Hãy bảo đảm ảnh chụp rõ nét, file không bị hỏng và Key chính xác!";
-                statusMsg.style.color = "red";
-                console.error(error);
-            }
-        }
-
-        // Hàm điền dữ liệu vào bảng HTML
-        function renderResultTable(headers, rows) {
-            const tableHead = document.getElementById('table-head');
-            const tableBody = document.getElementById('table-body');
-            const thr = document.createElement('tr');
-            headers.forEach(h => {
-                const th = document.createElement('th'); th.innerText = h; thr.appendChild(th);
-            });
-            tableHead.appendChild(thr);
-
-            rows.forEach(rowData => {
-                const tr = document.createElement('tr');
-                rowData.forEach(cellVal => {
-                    const td = document.createElement('td'); td.innerText = cellVal !== null ? cellVal : ""; tr.appendChild(td);
-                });
-                tableBody.appendChild(tr);
-            });
-        }
-
-        // Hàm tải file báo cáo Excel sạch về máy tính
-        function exportDataToCSV() {
-            if (globalHeaders.length === 0) return;
-            let csvContent = "";
-            csvContent += globalHeaders.join(",") + "\r\n";
-            globalRows.forEach(row => {
-                let cleanedRow = row.map(val => {
-                    let str = val !== null ? String(val) : "";
-                    return str.replace(/,/g, "."); 
-                });
-                csvContent += cleanedRow.join(",") + "\r\n";
-            });
-            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", "Du_Lieu_Xuly_Tu_Robot.csv");
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
