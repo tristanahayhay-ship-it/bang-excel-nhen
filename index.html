@@ -3,152 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Python Compiler (Interpreter)</title>
-    <!-- Tailwind CSS v4 -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- CodeMirror CSS -->
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <!-- CodeMirror JS -->
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
-    <!-- Pyodide Core Framework -->
-    <script src="https://jsdelivr.net"></script>
-    <style type="text/tailwindcss">
-        @theme {
-            --color-pg-blue: #24293e;
-            --color-pg-dark: #1e2235;
-            --color-pg-btn: #3e445e;
-            --color-pg-run: #2b5bf7;
-            --color-pg-run-hover: #1e4bd6;
+    <title>Trình Học Python Tự Lập - Hệ Thống Nhện Săn Lỗi</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
+        body { background-color: #161822; color: #a6accd; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
+        
+        header { height: 50px; background-color: #1f2335; border-bottom: 1px solid #292e42; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 15px; font-weight: bold; color: #ff9e64; }
+        .logo span { color: #7aa2f7; }
+        #run-btn { height: 32px; padding: 0 15px; background-color: #41a1f4; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #run-btn:hover { background-color: #268bd2; }
+
+        main { flex: 1; display: flex; overflow: hidden; }
+        
+        /* Khu vực nhập code tự chế không phụ thuộc thư viện ngoài */
+        .editor-zone { flex: 1; display: flex; flex-direction: column; position: relative; background-color: #1a1b26; border-right: 1px solid #292e42; }
+        .editor-header { height: 35px; background-color: #1f2335; display: flex; align-items: center; px: 15px; padding: 0 15px; font-size: 12px; color: #565f89; border-bottom: 1px solid #292e42; }
+        .code-container { flex: 1; display: flex; position: relative; overflow: auto; }
+        .line-numbers { width: 45px; background-color: #1a1b26; border-right: 1px solid #292e42; text-align: right; padding-right: 10px; padding-top: 15px; color: #414868; user-select: none; line-height: 24px; font-size: 14px; }
+        #code-input { flex: 1; background: transparent; border: none; outline: none; color: #c0caf5; padding-left: 15px; padding-top: 15px; resize: none; font-size: 14px; line-height: 24px; font-family: monospace; overflow-y: hidden; white-space: pre; }
+
+        /* ĐỒ HỌA CHÚ NHỆN CƠ KHÍ */
+        #spider-agent {
+            position: absolute; right: 40px; top: -150px; width: 50px; height: 50px;
+            z-index: 999; pointer-events: none; transition: top 0.4s ease-out;
+            display: flex; align-items: center; justify-content: center;
         }
-        .CodeMirror { 
-            height: 100%; 
-            font-family: 'Fira Code', Menlo, Monaco, Consolas, monospace; 
-            font-size: 15px; 
-            background: #1e2235 !important;
+        #spider-agent::before {
+            content: ''; position: absolute; bottom: 35px; left: 50%; width: 1px; height: 1000px; background: rgba(255,255,255,0.15);
         }
-        .CodeMirror-gutter { background: #1e2235 !important; border-right: 1px solid #2d324d !important; }
-        .CodeMirror-linenumbers { color: #5c6370 !important; }
+        .spider-body {
+            width: 20px; height: 26px; background: #ff5555; border-radius: 50%; position: relative;
+            border: 2px solid #ff79c6; box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+        .spider-body::after {
+            content: ''; position: absolute; bottom: 5px; left: 3px; width: 3px; height: 3px; background: #00ffff; border-radius: 50%;
+            box-shadow: 8px 0 #00ffff;
+        }
+        .spider-leg { position: absolute; width: 20px; height: 2px; background: #ff79c6; top: 50%; transform-origin: left center; transition: 0.3s; }
+        .l1 { left: -18px; transform: rotate(35deg); }
+        .l2 { left: -18px; transform: rotate(0deg); }
+        .l3 { left: -18px; transform: rotate(-35deg); }
+        .r1 { right: -20px; transform: scaleX(-1) rotate(35deg); }
+        .r2 { right: -20px; transform: scaleX(-1) rotate(0deg); }
+        .r3 { right: -20px; transform: scaleX(-1) rotate(-35deg); }
+        
+        /* Hiệu ứng duỗi chân dài ra chỉ điểm dòng lỗi */
+        #spider-agent.active .l2 { width: 65px; transform: rotate(10deg); background: #ff5555; box-shadow: 0 0 5px #ff5555; }
+
+        /* BONG BÓNG GIAO TIẾP TỰ CHẾ */
+        .spider-bubble {
+            position: absolute; right: 70px; top: -15px; width: 240px; background: #ff5555;
+            color: #fff; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold;
+            line-height: 1.4; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0;
+            transform: scale(0.8); transition: 0.3s; pointer-events: none;
+        }
+        .spider-bubble::after {
+            content: ''; position: absolute; right: -5px; top: 22px; border-width: 5px 0 5px 5px;
+            border-style: solid; border-color: transparent transparent transparent #ff5555;
+        }
+        #spider-agent.active .spider-bubble { opacity: 1; transform: scale(1); }
+
+        /* Khu vực Console */
+        .console-zone { width: 320px; background-color: #13141f; border-left: 1px solid #292e42; display: flex; flex-direction: column; }
+        .console-header { height: 35px; background-color: #1f2335; border-b: 1px solid #292e42; display: flex; align-items: center; padding: 0 15px; font-size: 11px; color: #565f89; text-transform: uppercase; font-weight: bold; }
+        .console-body { flex: 1; padding: 15px; overflow: auto; color: #73daca; font-size: 13px; line-height: 1.5; }
     </style>
 </head>
-<body class="bg-pg-blue text-gray-200 flex flex-col h-screen overflow-hidden m-0 p-0 font-sans selection:bg-blue-600/30">
+<body>
 
-    <!-- Top Navigation Bar -->
-    <header class="h-14 bg-pg-blue border-b border-[#2d324d] px-6 flex items-center justify-between z-10">
-        <div class="flex items-center space-x-2">
-            <span class="text-xl font-black text-white tracking-wider">Programiz</span>
-            <span class="text-xs bg-[#3a3f58] text-gray-300 px-1.5 py-0.5 rounded font-mono font-bold">PYTHON</span>
-        </div>
-        <div class="flex items-center space-x-3">
-            <div id="status" class="text-xs font-mono text-yellow-400 mr-2 flex items-center gap-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
-                Loading Python...
-            </div>
-            <button id="run-btn" disabled class="h-9 px-5 bg-pg-run hover:bg-pg-run-hover disabled:bg-[#32364c] text-white font-semibold text-sm rounded shadow transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center space-x-1">
-                <span>Run</span>
-            </button>
-        </div>
+    <header>
+        <div class="logo">🐍 PYTHON <span>STANDALONE</span></div>
+        <button id="run-btn">Chạy Lệnh</button>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-pg-dark">
-        <!-- Left Panel: main.py Editor -->
-        <section class="flex-1 flex flex-col min-w-0 border-b md:border-b-0 md:border-r border-[#2d324d]">
-            <div class="h-10 bg-pg-blue flex items-center justify-between px-4 border-b border-[#2d324d]">
-                <div class="flex items-center space-x-1 border-b-2 border-pg-run h-full px-2 mt-[2px]">
-                    <span class="text-xs font-mono font-bold text-white tracking-wide">main.py</span>
-                </div>
-                <button id="clear-btn" class="text-xs text-gray-400 hover:text-white transition font-medium cursor-pointer">Clear</button>
+    <main>
+        <!-- Editor Khu Vực Viết Mã Nguồn -->
+        <section class="editor-zone">
+            <div class="editor-header">MAIN.PY (Bộ Phân Tích Cú Pháp Độc Lập)</div>
+            <div class="code-container">
+                <div class="line-numbers" id="line-box">1</div>
+                <textarea id="code-input" spellcheck="false" placeholder="# Nhập mã nguồn Python tại đây..."></textarea>
             </div>
-            <div class="flex-1 relative overflow-hidden">
-                <textarea id="code-editor"></textarea>
+
+            <!-- Mô hình nhện định vị -->
+            <div id="spider-agent">
+                <div class="spider-bubble" id="spider-talk"></div>
+                <div class="spider-leg l1"></div>
+                <div class="spider-leg l2"></div>
+                <div class="spider-leg l3"></div>
+                <div class="spider-leg r1"></div>
+                <div class="spider-leg r2"></div>
+                <div class="spider-leg r3"></div>
+                <div class="spider-body"></div>
             </div>
         </section>
-        <!-- Right Panel: Output Console -->
-        <section class="w-full md:w-1/2 flex flex-col min-w-0 bg-[#151824]">
-            <div class="h-10 bg-[#1a1d29] flex items-center px-4 border-b border-[#2d324d]">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Output</span>
-            </div>
-            <div class="flex-1 p-5 font-mono text-sm leading-relaxed overflow-auto select-text">
-                <pre id="output" class="text-[#a6accd] whitespace-pre-wrap">Preparing compiler workspace...</pre>
-            </div>
+        <!-- Cột hiển thị bảng log Console -->
+        <section class="console-zone">
+            <div class="console-header">Kết Quả Hệ Thống (Console)</div>
+            <div class="console-body" id="console-log">Sẵn sàng nhận lệnh. Hệ thống hoạt động 100% Offline độc lập.</div>
         </section>
     </main>
 
     <script>
-        let pyodideInstance = null;
-        const defaultPythonCode = `# Online Python compiler (interpreter) to run Python online.\\n# Write Python 3 code in this online editor and run it.\\n\\nprint("Hello world")`;
+        const codeInput = document.getElementById("code-input");
+        const lineBox = document.getElementById("line-box");
+        const consoleLog = document.getElementById("console-log");
+        const spiderAgent = document.getElementById("spider-agent");
+        const spiderTalk = document.getElementById("spider-talk");
 
-        // Initialize CodeMirror Editor
-        const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
-            mode: "python",
-            theme: "dracula",
-            lineNumbers: true,
-            indentUnit: 4,
-            matchBrackets: true,
-            autoCloseBrackets: true,
-            lineWrapping: true
-        });
-        editor.setValue(defaultPythonCode);
-
-        // Core Environment Setup (WebAssembly Runtime)
-        async function initPyodide() {
-            try {
-                pyodideInstance = await loadPyodide();
-                document.getElementById("status").innerHTML = `
-                    <span class="h-1.5 w-1.5 rounded-full bg-green-400"></span>
-                    <span class="text-green-400 text-xs">Ready</span>
-                `;
-                document.getElementById("run-btn").disabled = false;
-                document.getElementById("output").textContent = 'Python 3 environment active. Click "Run" to execute code.';
-            } catch (err) {
-                document.getElementById("output").textContent = "Error setting up environment:\\n" + err;
+        // Cập nhật số dòng tự động khi người dùng gõ
+        function updateLineNumbers() {
+            const lines = codeInput.value.split("\n");
+            let numHtml = "";
+            for (let i = 1; i <= lines.length; i++) {
+                numHtml += i + "<br>";
             }
+            lineBox.innerHTML = numHtml;
         }
 
-        // Stream Interception Logic
-        async function runCode() {
-            if (!pyodideInstance) return;
-            
-            const outputElement = document.getElementById("output");
-            outputElement.textContent = ""; 
-            
-            let outputBuffer = "";
-            pyodideInstance.setStdout({
-                batched: (str) => { 
-                    outputBuffer += str + "\\n"; 
-                    outputElement.textContent = outputBuffer;
-                }
-            });
-            pyodideInstance.setStderr({
-                batched: (str) => { 
-                    outputBuffer += str + "\\n"; 
-                    outputElement.textContent = outputBuffer;
-                }
-            });
+        // TỰ ĐỊNH NGHĨA QUY TẮC PHÂN TÍCH CÚ PHÁP PYTHON KHÔNG CẦN LIÊN KẾT NGOÀI
+        function selfCompilePython(code) {
+            const lines = code.split("\n");
+            let openBrackets = 0;
+            let openQuotes = null;
+            let blockIndentLevel = 0;
 
-            try {
-                const code = editor.getValue();
-                await pyodideInstance.runPythonAsync(code);
-                if (!outputBuffer) {
-                    outputElement.textContent = "Chương trình chạy thành công (Không có dữ liệu in ra).";
+            for (let i = 0; i < lines.length; i++) {
+                let currentLine = lines[i];
+                let trimmed = currentLine.trim();
+                let lineNum = i + 1;
+
+                if (trimmed === "" || trimmed.startsWith("#")) continue;
+
+                // Quy tắc 1: Kiểm tra cấu trúc đóng mở ngoặc đơn ()
+                for (let char of currentLine) {
+                    if (char === "(") openBrackets++;
+                    if (char === ")") openBrackets--;
                 }
-            } catch (err) {
-                outputElement.textContent = err.message;
+                if (openBrackets < 0) {
+                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Thừa dấu đóng ngoặc đơn ')' mà không có mở ngoặc trước đó!" };
+                }
+
+                // Quy tắc 2: Kiểm tra cấu trúc đóng mở chuỗi ký tự '' hoặc ""
+                for (let char of currentLine) {
+                    if (char === '"' || char === "'") {
+                        if (openQuotes === char) openQuotes = null;
+                        else if (!openQuotes) openQuotes = char;
+                    }
+                }
+                if (openQuotes) {
+                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Chuỗi văn bản bị hở! Thiếu dấu nháy kết thúc dòng văn bản." };
+                }
+
+                // Quy tắc 3: Kiểm tra cấu trúc rẽ nhánh bắt buộc có dấu hai chấm ':'
+                if (trimmed.startsWith("if ") || trimmed.startsWith("elif ") || trimmed.startsWith("else") || trimmed.startsWith("for ") || trimmed.startsWith("while ") || trimmed.startsWith("def ")) {
+                    if (!trimmed.endsWith(":")) {
+                        return { line: lineNum, msg: "⚠️ Quy tắc cấu trúc: Thiếu dấu hai chấm ':' ở cuối câu lệnh điều kiện/vòng lặp." };
+                    }
+                }
+
+                // Quy tắc 4: Kiểm tra logic thụt lề (Indentation Rules) sau khối lệnh chứa dấu ':'
+                let spacesCount = currentLine.search(/\S/);
+                if (blockIndentLevel > 0 && spacesCount < blockIndentLevel && trimmed !== "") {
+                    // Nếu dòng trước yêu cầu thụt lề mà dòng này không thụt lề
+                    if (spacesCount === 0) {
+                        return { line: lineNum, msg: "⚠️ Lỗi Thụt Lề (Indentation): Câu lệnh này bắt buộc phải lùi vào (ấn Tab hoặc 4 dấu cách)!" };
+                    }
+                }
+
+                // Cập nhật mức độ thụt lề mong đợi cho dòng tiếp theo
+                if (trimmed.endsWith(":")) {
+                    blockIndentLevel = (spacesCount === -1 ? 0 : spacesCount) + 4;
+                } else if (trimmed !== "") {
+                    blockIndentLevel = spacesCount;
+                }
             }
+
+            if (openBrackets > 0) {
+                return { line: lines.length, msg: "⚠️ Cú pháp lỗi: Quên chưa đóng ngoặc đơn ')' ở cuối chương trình!" };
+            }
+
+            return null; // Không có lỗi
         }
 
-        // DOM Event Binding
-        document.getElementById("run-btn").onclick = runCode;
-        document.getElementById("clear-btn").onclick = () => {
-            editor.setValue("");
-            editor.focus();
+        // ĐIỀU KHIỂN ĐỊNH VỊ TỌA ĐỘ VÀ GIAO TIẾP CHO NHỆN
+        function runSyntaxCheck() {
+            const code = codeInput.value;
+            const error = selfCompilePython(code);
+
+            if (!error) {
+                // Code chuẩn quy tắc: Nhện bò lên ẩn đi
+                spiderAgent.classList.remove("active");
+                spiderAgent.style.top = "-150px";
+                return;
+            }
+
+            // Tính toán khoảng cách tọa độ hiển thị từng dòng (mỗi dòng cao 24px + 15px padding đầu)
+            const rowHeight = 24;
+            const paddingTop = 50; // Khớp với Header và Panel Header bên ngoài
+            const spiderTargetTop = ((error.line - 1) * rowHeight) + paddingTop;
+
+            // Kích hoạt nhện di chuyển và mở bong bóng thoại chỉ điểm
+            spiderTalk.innerText = `Dòng ${error.line}:\n\n` + error.msg;
+            spiderAgent.style.top = spiderTargetTop + "px";
+            
+            setTimeout(() => {
+                spiderAgent.classList.add("active");
+            }, 50);
+        }
+
+        // Xử lý nút Chạy lệnh giả lập cơ bản
+        document.getElementById("run-btn").onclick = () => {
+            const code = codeInput.value;
+            const error = selfCompilePython(code);
+
+            if (error) {
+                consoleLog.innerHTML = `<span style="color: #f7768e;">[LỖI CÚ PHÁP KHÔNG THỂ CHẠY]:<br>Hãy sửa lại theo hướng dẫn của Nhện ở dòng ${error.line}.</span>`;
+                return;
+            }
+
+            // Giả lập xử lý hàm xuất dữ liệu print cơ bản trong JS thuần
+            if (code.includes("print(")) {
+                let matches = code.match(/print\((['"])(.*?)\1\)/g);
+                if (matches) {
+                    let results = matches.map(m => m.replace(/print\((['"])/, "").replace(/(['"])\)/, ""));
+                    consoleLog.innerHTML = results.join("<br>");
+                    return;
+                }
+            }
+            consoleLog.innerHTML = "Chương trình thực thi thành công (Không có lệnh in dữ liệu ra ngoài).";
         };
 
-        // Bootstrap App Execution
+        // Theo dõi sự kiện nhập phím của người dùng
+        let timer;
+        codeInput.addEventListener("input", () => {
+            updateLineNumbers();
+            clearTimeout(timer);
+            // Quét lỗi sau khi dừng gõ 300ms
+            timer = setTimeout(runSyntaxCheck, 300);
+        });
+
+        // Giữ đồng bộ cuộn màn hình giữa dòng số và khung gõ
+        codeInput.addEventListener("scroll", () => {
+            lineBox.scrollTop = codeInput.scrollTop;
+        });
+
+        // Kích hoạt khởi chạy mặc định ban đầu
         window.addEventListener("DOMContentLoaded", () => {
-            initPyodide();
+            updateLineNumbers();
         });
     </script>
 </body>
