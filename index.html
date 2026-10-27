@@ -3,247 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Lập Trình Python Cùng Nhện Crawler Độc Lập</title>
+    <title>Phần mềm Quản lý Cửa hàng Tiện lợi</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-        body { background-color: #161822; color: #a6accd; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
-        
-        header { height: 50px; background-color: #1f2335; border-bottom: 1px solid #292e42; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 15px; font-weight: bold; color: #ff9e64; }
-        .logo span { color: #7aa2f7; }
-        #run-btn { height: 32px; padding: 0 15px; background-color: #41a1f4; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #run-btn:hover { background-color: #268bd2; }
-
-        main { flex: 1; display: flex; overflow: hidden; }
-        
-        /* Khu vực nhập code tĩnh tự viết */
-        .editor-zone { flex: 1; display: flex; flex-direction: column; position: relative; background-color: #1a1b26; border-right: 1px solid #292e42; }
-        .editor-header { height: 35px; background-color: #1f2335; display: flex; align-items: center; padding: 0 15px; font-size: 12px; color: #565f89; border-bottom: 1px solid #292e42; }
-        .code-container { flex: 1; display: flex; position: relative; overflow: auto; }
-        .line-numbers { width: 45px; background-color: #1a1b26; border-right: 1px solid #292e42; text-align: right; padding-right: 10px; padding-top: 15px; color: #414868; user-select: none; line-height: 24px; font-size: 14px; }
-        #code-input { flex: 1; background: transparent; border: none; outline: none; color: #c0caf5; padding-left: 15px; padding-top: 15px; resize: none; font-size: 14px; line-height: 24px; font-family: monospace; overflow-y: hidden; white-space: pre; }
-
-        /* ĐỒ HỌA CON NHỆN CRAWLER MẠNG LƯỚI NEON MỚI */
-        #spider-agent {
-            position: absolute; right: 40px; top: -150px; width: 40px; height: 40px;
-            z-index: 999; pointer-events: none; transition: top 0.4s ease-out;
-            display: flex; align-items: center; justify-content: center;
-        }
-        /* Đường chỉ tơ nối từ trên xuống */
-        #spider-agent::before {
-            content: ''; position: absolute; bottom: 25px; left: 50%; width: 1px; height: 1000px; background: rgba(0, 240, 255, 0.25); box-shadow: 0 0 4px #00f0ff;
-        }
-        .spider-body {
-            width: 14px; height: 18px; background: #00f0ff; border-radius: 50%; position: relative;
-            border: 2px solid #ffffff; box-shadow: 0 0 12px #00f0ff, 0 4px 8px rgba(0,0,0,0.6);
-        }
-        /* Mắt nhện hồng phát sáng kiểu Graph Node */
-        .spider-body::after {
-            content: ''; position: absolute; bottom: 3px; left: 2px; width: 3px; height: 3px; background: #ff007f; border-radius: 50%;
-            box-shadow: 6px 0 #ff007f, 0 0 4px #ff007f;
-        }
-        /* Chân nhện crawler tủa rộng */
-        .spider-leg { position: absolute; width: 14px; height: 2px; background: #00f0ff; top: 50%; transform-origin: left center; transition: width 0.3s, transform 0.3s; box-shadow: 0 0 3px #00f0ff; }
-        .l1 { left: -12px; transform: rotate(45deg); }
-        .l2 { left: -12px; transform: rotate(0deg); }
-        .l3 { left: -12px; transform: rotate(-45deg); }
-        .r1 { right: -14px; transform: scaleX(-1) rotate(45deg); }
-        .r2 { right: -14px; transform: scaleX(-1) rotate(0deg); }
-        .r3 { right: -14px; transform: scaleX(-1) rotate(-45deg); }
-        
-        /* Hiệu ứng duỗi chân dài ra dệt tơ chỉ điểm lỗi */
-        #spider-agent.active .l2 { width: 55px; transform: rotate(12deg); background: #ff007f; box-shadow: 0 0 8px #ff007f; }
-
-        /* BONG BÓNG GIAO TIẾP DẠNG KHỐI CHỨA THỰC THỂ (NEON BUBBLE) */
-        .spider-bubble {
-            position: absolute; right: 60px; top: -15px; width: 250px; background: rgba(13, 15, 26, 0.95);
-            color: #00f0ff; border: 1px solid #00f0ff; padding: 12px; border-radius: 6px; font-size: 12px; font-weight: bold;
-            line-height: 1.5; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3), 0 4px 10px rgba(0,0,0,0.7); opacity: 0;
-            transform: scale(0.8); transition: 0.3s; pointer-events: none;
-        }
-        .spider-bubble::after {
-            content: ''; position: absolute; right: -6px; top: 22px; border-width: 5px 0 5px 6px;
-            border-style: solid; border-color: transparent transparent transparent #00f0ff;
-        }
-        #spider-agent.active .spider-bubble { opacity: 1; transform: scale(1); }
-
-        /* Khung hiển thị kết quả */
-        .console-zone { width: 320px; background-color: #13141f; border-left: 1px solid #292e42; display: flex; flex-direction: column; }
-        .console-header { height: 35px; background-color: #1f2335; border-bottom: 1px solid #292e42; display: flex; align-items: center; padding: 0 15px; font-size: 11px; color: #565f89; text-transform: uppercase; font-weight: bold; }
-        .console-body { flex: 1; padding: 15px; overflow: auto; color: #73daca; font-size: 13px; line-height: 1.5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { text-align: center; color: #333; margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; color: #555; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        button:hover { background-color: #0056b3; }
+        .log-box { background-color: #1e1e1e; color: #75be00; padding: 15px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; margin-top: 20px; min-height: 15px; white-space: pre-line; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">🐍 PYTHON <span>STANDALONE</span></div>
-        <button id="run-btn">Chạy Lệnh</button>
-    </header>
+<div class="container">
+    <h2>🏪 CỬA HÀNG TIỆN LỢI OS</h2>
+    
+    <div id="step1">
+        <label>Tên nhân viên thu ngân:</label>
+        <input type="text" id="tenNhanVien" placeholder="Nhập tên của bạn...">
+        <label>Số lượng món đồ khách mua:</label>
+        <input type="number" id="soLuongMuan" placeholder="Ví dụ: 3">
+        <button onclick="batDauNhapGia()">Bắt đầu nhập giá tiền</button>
+    </div>
 
-    <main>
-        <section class="editor-zone">
-            <div class="editor-header">MAIN.PY (Bộ Quét Lỗi Thực Thể Độc Lập)</div>
-            <div class="code-container">
-                <div class="line-numbers" id="line-box">1</div>
-                <textarea id="code-input" spellcheck="false" placeholder="# Nhập mã nguồn Python tại đây..."></textarea>
-            </div>
+    <div id="step2" style="display:none;">
+        <div id="danhSachMonDo"></div>
+        <button onclick="tinhToanHoaDon()">Tính tổng tiền & Giảm giá</button>
+    </div>
 
-            <!-- Chú nhện mạng lưới Crawler Neon mới -->
-            <div id="spider-agent">
-                <div class="spider-bubble" id="spider-talk"></div>
-                <div class="spider-leg l1"></div>
-                <div class="spider-leg l2"></div>
-                <div class="spider-leg l3"></div>
-                <div class="spider-leg r1"></div>
-                <div class="spider-leg r2"></div>
-                <div class="spider-leg r3"></div>
-                <div class="spider-body"></div>
-            </div>
-        </section>
-        <section class="console-zone">
-            <div class="console-header">Kết Quả Hệ Thống (Console)</div>
-            <div class="console-body" id="console-log">Sẵn sàng nhận lệnh. Hệ thống hoạt động 100% Offline độc lập.</div>
-        </section>
-    </main>
+    <div id="step3" style="display:none;">
+        <div class="log-box" id="ketQuaHoaDon"></div>
+        <label style="margin-top: 20px;">Số tiền khách đưa cho bạn:</label>
+        <input type="number" id="tienKhachDua" placeholder="Nhập số tiền...">
+        <button onclick="thanhToanYeuCau()">Xác nhận thanh toán</button>
+    </div>
 
-    <script>
-        const codeInput = document.getElementById("code-input");
-        const lineBox = document.getElementById("line-box");
-        const consoleLog = document.getElementById("console-log");
-        const spiderAgent = document.getElementById("spider-agent");
-        const spiderTalk = document.getElementById("spider-talk");
+    <div class="log-box" id="manHinhChinh" style="margin-top:20px; display:none;"></div>
+</div>
 
-        // Đồng bộ số dòng tự động
-        function updateLineNumbers() {
-            const lines = codeInput.value.split("\n");
-            let numHtml = "";
-            for (let i = 1; i <= lines.length; i++) { numHtml += i + "<br>"; }
-            lineBox.innerHTML = numHtml;
+<script>
+    let tenThuNgan = "";
+    let soLuong = 0;
+    let tongTien = 0;
+    let tienPhaiTra = 0;
+    const donVi = "VND";
+
+    function batDauNhapGia() {
+        tenThuNgan = document.getElementById("tenNhanVien").value || "Thu ngân";
+        soLuong = parseInt(document.getElementById("soLuongMuan").value);
+        
+        if (isNaN(soLuong) || soLuong <= 0) {
+            alert("Vui lòng nhập số lượng món đồ hợp lệ lớn hơn 0!");
+            return;
         }
 
-        // BỘ QUY TẮC PHÂN TÍCH CÚ PHÁP PYTHON TỰ VIẾT (GIỮ NGUYÊN BẢN CŨ)
-        function selfCompilePython(code) {
-            const lines = code.split("\n");
-            let openBrackets = 0;
-            let openQuotes = null;
-            let blockIndentLevel = 0;
+        let htmlInputs = "";
+        // Vòng lặp FOR tương tự trong Python để tạo ra số lượng ô nhập giá tiền
+        for (let i = 0; i < soLuong; i++) {
+            htmlInputs += `<label>Giá tiền món đồ thứ ${i + 1} (${donVi}):</label>
+                           <input type="number" class="gia-item" placeholder="Nhập giá tiền...">`;
+        }
+        
+        document.getElementById("danhSachMonDo").innerHTML = htmlInputs;
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+    }
 
-            for (let i = 0; i < lines.length; i++) {
-                let currentLine = lines[i];
-                let trimmed = currentLine.trim();
-                let lineNum = i + 1;
+    function tinhToanHoaDon() {
+        let inputs = document.getElementsByClassName("gia-item");
+        tongTien = 0;
 
-                if (trimmed === "" || trimmed.startsWith("#")) continue;
-
-                // Quy tắc đóng mở ngoặc
-                for (let char of currentLine) {
-                    if (char === "(") openBrackets++;
-                    if (char === ")") openBrackets--;
-                }
-                if (openBrackets < 0) {
-                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Thừa dấu đóng ngoặc đơn ')' mà không có mở ngoặc trước đó!" };
-                }
-
-                // Quy tắc nháy chuỗi
-                for (let char of currentLine) {
-                    if (char === '"' || char === "'") {
-                        if (openQuotes === char) openQuotes = null;
-                        else if (!openQuotes) openQuotes = char;
-                    }
-                }
-                if (openQuotes) {
-                    return { line: lineNum, msg: "⚠️ Cú pháp lỗi: Chuỗi văn bản bị hở! Thiếu dấu nháy kết thúc dòng văn bản." };
-                }
-
-                // Quy tắc dấu hai chấm
-                if (trimmed.startsWith("if ") || trimmed.startsWith("elif ") || trimmed.startsWith("else") || trimmed.startsWith("for ") || trimmed.startsWith("while ") || trimmed.startsWith("def ")) {
-                    if (!trimmed.endsWith(":")) {
-                        return { line: lineNum, msg: "⚠️ Quy tắc cấu trúc: Thiếu dấu hai chấm ':' ở cuối câu lệnh điều kiện/vòng lặp." };
-                    }
-                }
-
-                // Quy tắc thụt dòng Indentation
-                let spacesCount = currentLine.search(/\S/);
-                if (blockIndentLevel > 0 && spacesCount < blockIndentLevel && trimmed !== "") {
-                    if (spacesCount === 0) {
-                        return { line: lineNum, msg: "⚠️ Lỗi Thụt Lề (Indentation): Câu lệnh này bắt buộc phải lùi vào (ấn Tab hoặc 4 dấu cách)!" };
-                    }
-                }
-
-                if (trimmed.endsWith(":")) {
-                    blockIndentLevel = (spacesCount === -1 ? 0 : spacesCount) + 4;
-                } else if (trimmed !== "") {
-                    blockIndentLevel = spacesCount;
-                }
-            }
-
-            if (openBrackets > 0) {
-                return { line: lines.length, msg: "⚠️ Cú pháp lỗi: Quên chưa đóng ngoặc đơn ')' ở cuối chương trình!" };
-            }
-
-            return null;
+        // Vòng lặp FOR cộng dồn tổng tiền
+        for (let i = 0; i < inputs.length; i++) {
+            let gia = parseInt(inputs[i].value) || 0;
+            tongTien += gia;
         }
 
-        // ĐIỀU KHIỂN NHỆN CRAWLER NEON DI CHUYỂN ĐẾN DÒNG CODE LỖI
-        function runSyntaxCheck() {
-            const code = codeInput.value;
-            const error = selfCompilePython(code);
+        let giamGia = 0;
+        // Câu lệnh IF - ELSE lọc giảm giá y hệt Python bạn vừa viết
+        if (tongTien >= 100000) {
+            giamGia = 20000;
+        } else if (tongTien >= 50000) {
+            giamGia = 10000;
+        } else {
+            giamGia = 0;
+        }
 
-            if (!error) {
-                spiderAgent.classList.remove("active");
-                spiderAgent.style.top = "-150px";
-                return;
-            }
+        tienPhaiTra = tongTien - giamGia;
 
-            // Tính toán khoảng cách dòng (mỗi dòng cao 24px + 15px padding đầu)
-            const rowHeight = 24;
-            const paddingTop = 50; 
-            const spiderTargetTop = ((error.line - 1) * rowHeight) + paddingTop;
+        let logIn = `Tổng tiền gốc: ${tongTien} ${donVi}\n`;
+        if (giamGia > 0) {
+            logIn += `Khách được giảm giá: -${giamGia} ${donVi}\n`;
+        } else {
+            logIn += `Không được giảm giá.\n`;
+        }
+        logIn += `👉 SỐ TIỀN KHÁCH PHẢI TRẢ LÀ: ${tienPhaiTra} ${donVi}`;
 
-            // Nhện Crawler di chuyển đến phần tử lỗi và dệt sợi tơ hồng neon chỉ điểm
-            spiderTalk.innerHTML = `<span style="color: #ff007f;">[CRAWLER GRAPH ERROR]</span><br>Dòng ${error.line}: \${error.msg}`;
-            spiderAgent.style.top = spiderTargetTop + "px";
+        document.getElementById("ketQuaHoaDon").innerText = logIn;
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("step3").style.display = "block";
+    }
+
+    function thanhToanYeuCau() {
+        let khachDua = parseInt(document.getElementById("tienKhachDua").value) || 0;
+        let manHinh = document.getElementById("manHinhChinh");
+        manHinh.style.display = "block";
+
+        // Logic WHILE kiểm tra tiền thiếu
+        if (khachDua < tienPhaiTra) {
+            manHinh.innerText = "🚨 Máy tính báo: Thiếu tiền rồi! Vui lòng bảo khách đưa thêm tiền.";
+            manHinh.style.color = "#ff4d4d";
+        } else {
+            // Khi khách đưa đủ hoặc thừa tiền (Thoát điều kiện thiếu)
+            let tienThua = khachDua - tienPhaiTra;
+            manHinh.style.color = "#75be00";
+            manHinh.innerText = `✅ THANH TOÁN THÀNH CÔNG!\n\n` +
+                                `Tiền thừa trả lại khách là: ${tienThua} ${donVi}\n` +
+                                `Thu ngân [${tenThuNgan}] thông báo: Cảm ơn quý khách đã ủng hộ quán em!`;
             
-            setTimeout(() => {
-                spiderAgent.classList.add("active");
-            }, 50);
+            // Ẩn ô nhập tiền sau khi hoàn thành
+            document.getElementById("step3").getElementsByTagName("button")[0].disabled = true;
         }
+    }
+</script>
 
-        // Logic nút chạy lệnh giả lập cơ bản
-        document.getElementById("run-btn").onclick = () => {
-            const code = codeInput.value;
-            const error = selfCompilePython(code);
-
-            if (error) {
-                consoleLog.innerHTML = `<span style="color: #f7768e;">[LỖI CÚ PHÁP KHÔNG THỂ CHẠY]:<br>Hãy sửa lại theo hướng dẫn của Nhện Crawler ở dòng \${error.line}.</span>`;
-                return;
-            }
-
-            if (code.includes("print(")) {
-                let matches = code.match(/print\((['"])(.*?)\1\)/g);
-                if (matches) {
-                    let results = matches.map(m => m.replace(/print\((['"])/, "").replace(/(['"])\)/, ""));
-                    consoleLog.innerHTML = results.join("<br>");
-                    return;
-                }
-            }
-            consoleLog.innerHTML = "Chương trình thực thi thành công (Không có lệnh in dữ liệu ra ngoài).";
-        };
-
-        let timer;
-        codeInput.addEventListener("input", () => {
-            updateLineNumbers();
-            clearTimeout(timer);
-            timer = setTimeout(runSyntaxCheck, 300);
-        });
-
-        codeInput.addEventListener("scroll", () => {
-            lineBox.scrollTop = codeInput.scrollTop;
-        });
-
-        window.addEventListener("DOMContentLoaded", () => {
-            updateLineNumbers();
-        });
-    </script>
 </body>
 </html>
