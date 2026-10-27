@@ -147,7 +147,7 @@ function shot(gunGroup) {
     const intersects = raycaster.intersectObjects(targets);
 
     if (intersects.length > 0) {
-        const hitTarget = intersects[0].object; // Lấy đúng vật thể đầu tiên trúng đạn
+        const hitTarget = intersects[0].object; // ĐÃ SỬA: Lấy đúng vật thể đầu tiên trong mảng trúng đạn
         
         // Xóa bia bắn bị trúng khỏi map
         scene.remove(hitTarget);
