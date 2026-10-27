@@ -3,61 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Biên Dịch Nhện Săn Bug - Programiz Style</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; background-color: #0f141c; color: #e1e4e8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
-        
-        /* Thanh điều hướng trên cùng */
-        header { background: #161b22; height: 50px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; z-index: 10; position: relative; }
-        h1 { font-size: 15px; font-weight: 600; color: #58a6ff; display: flex; align-items: center; gap: 8px; }
-        #run-btn { background: #238636; color: white; border: none; padding: 6px 16px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        #run-btn:hover { background: #2ea043; }
-
-        /* Bố cục chia đôi màn hình kiểu Programiz */
-        #main-container { display: flex; width: 100%; height: calc(100% - 50px); position: relative; }
-        
-        /* Phần bên trái: Trình soạn thảo Code */
-        .pane-left { flex: 1; height: 100%; border-right: 1px solid #30363d; display: flex; position: relative; background: #111827; }
-        .line-numbers { width: 45px; height: 100%; padding: 20px 0; text-align: right; padding-right: 10px; color: #4b5563; font-family: monospace; font-size: 15px; line-height: 24px; user-select: none; background: #0b0f19; border-right: 1px solid #1f2937; overflow: hidden; }
-        #code-input { flex: 1; height: 100%; background: transparent; color: #e5e7eb; border: none; padding: 20px 15px; font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 15px; line-height: 24px; outline: none; resize: none; caret-color: #3b82f6; white-space: pre; overflow: auto; }
-
-        /* Phần bên phải: Cửa sổ Output console */
-        .pane-right { width: 40%; height: 100%; background: #0b0f17; display: flex; flex-direction: column; }
-        .output-header { background: #111823; padding: 10px 20px; font-size: 12px; font-weight: bold; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1f293d; }
-        #console-output { flex: 1; padding: 20px; font-family: monospace; font-size: 14px; line-height: 1.6; overflow-y: auto; color: #10b981; white-space: pre-wrap; }
-        .error-text { color: #ef4444 !important; }
-
-        /* Canvas trong suốt phủ toàn bộ khu vực làm việc để nhện bò qua lại */
-        #spider-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
-    </style>
-    <!-- Bộ thư viện phân tính cú pháp code -->
-    <script src="https://cloudflare.com"></script>
+    <title>Trình Biên Dịch Python Trực Tuyến - Programiz Tiếng Việt</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Nhúng thư viện lõi biên dịch Python ngay trên trình duyệt -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
     <header>
-        <h1>🕷️ Trình Biên Dịch Nhện Săn Bug (Mô phỏng Programiz)</h1>
-        <button id="run-btn">▶ CHẠY CODE</button>
+        <div class="logo"><span>🕷️</span> Python Online Compiler (Việt Hóa)</div>
+        <button class="btn-run" onclick="runPython()">▶ CHẠY CODE (RUN)</button>
     </header>
 
-    <div id="main-container">
-        <!-- Vùng soạn thảo code bên trái -->
-        <div class="pane-left">
-            <div class="line-numbers" id="line-box">1</div>
-            <textarea id="code-input" spellcheck="false" placeholder="// Nhập code JavaScript tại đây để chạy...&#10;function kiemTra() {&#10;    console.log('Hệ thống hoạt động tốt!')&#10;}"></textarea>
-        </div>
+    <div class="main-compiler">
+        <!-- BÊN TRÁI: Giao diện soạn thảo mã nguồn -->
+        <div class="editor-container">
+            <div class="panel-bar">main.py</div>
+            <textarea id="code" spellcheck="false"># Gõ thử code sai ở đây để xem nhện hoạt động nhé!
+ten = "Lập trình viên"
+print("Xin chào " + ten)
 
-        <!-- Cửa sổ Output bên phải -->
-        <div class="pane-right">
-            <div class="output-header">Kết Quả Đầu Ra (Output)</div>
-            <div id="console-output">Chưa chạy chương trình. Hãy bấm nút 'CHẠY CODE' hoặc cố tình viết sai cú pháp để gọi nhện.</div>
+# CỐ TÌNH LỖI: Viết sai chính tả hàm print thành 'prnt'
+prnt("Dòng này bị viết sai tên hàm rồi!")
+</textarea>
+            <!-- Phần tử ẩn làm gương đo đạc pixel tọa độ ký tự lỗi -->
+            <div id="textarea-mirror"></div>
         </div>
-
-        <!-- Màn Canvas của nhện -->
-        <canvas id="spider-canvas"></canvas>
+        
+        <!-- BÊN PHẢI: Khung hiển thị kết quả nguyên bản của Programiz -->
+        <div class="output-container">
+            <div class="panel-bar">KẾT QUẢ HỆ THỐNG (OUTPUT)</div>
+            <pre id="output">Đang khởi động môi trường Python... Vui lòng đợi...</pre>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Bong bóng thoại Tiếng Việt của con nhện kiểm lỗi -->
+    <div id="spider-bubble"></div>
+    
+    <!-- Lớp vẽ đồ họa con nhện phủ toàn màn hình -->
+    <canvas id="spider-layer"></canvas>
+
+    <script src="script.js"></script>
 </body>
 </html>
